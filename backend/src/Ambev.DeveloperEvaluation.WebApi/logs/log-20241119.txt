@@ -1,0 +1,13 @@
+2024-11-19 13:52:23.477 -03:00 [INF] Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckService Health Check enabled at: '/health'
+2024-11-19 13:52:23.570 -03:00 [INF] Microsoft.AspNetCore.DataProtection.KeyManagement.XmlKeyManager User profile is available. Using '/Users/mac/.aspnet/DataProtection-Keys' as key repository; keys will not be encrypted at rest.
+2024-11-19 13:52:23.691 -03:00 [INF] Microsoft.Hosting.Lifetime Now listening on: http://localhost:5119
+2024-11-19 13:52:23.691 -03:00 [INF] Microsoft.Hosting.Lifetime Application started. Press Ctrl+C to shut down.
+2024-11-19 13:52:23.691 -03:00 [INF] Microsoft.Hosting.Lifetime Hosting environment: Development
+2024-11-19 13:52:23.691 -03:00 [INF] Microsoft.Hosting.Lifetime Content root path: /Users/mac/RiderProjects/developer-store/backend/src/Ambev.DeveloperEvaluation.WebApi
+2024-11-19 13:52:24.581 -03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request starting HTTP/1.1 GET http://localhost:5119/swagger/index.html - null null
+2024-11-19 13:52:24.800 -03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request finished HTTP/1.1 GET http://localhost:5119/swagger/index.html - 200 null text/html;charset=utf-8 221.4063ms
+2024-11-19 13:52:24.914 -03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request starting HTTP/1.1 GET http://localhost:5119/swagger/index.js - null null
+2024-11-19 13:52:24.956 -03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request finished HTTP/1.1 GET http://localhost:5119/swagger/index.js - 200 null application/javascript;charset=utf-8 36.8957ms
+2024-11-19 13:52:25.161 -03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request starting HTTP/1.1 GET http://localhost:5119/swagger/v1/swagger.json - null null
+2024-11-19 13:52:25.465 -03:00 [INF] Microsoft.AspNetCore.Hosting.Diagnostics Request finished HTTP/1.1 GET http://localhost:5119/swagger/v1/swagger.json - 200 null application/json;charset=utf-8 303.3732ms
+2024-11-19 13:52:36.317 -03:00 [INF] Microsoft.Hosting.Lifetime Application is shutting down...
