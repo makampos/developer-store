@@ -1,0 +1,1 @@
+/Users/mac/RiderProjects/developer-store/backend/obj/Debug/docker-compose.dcproj.CoreCompileInputs.cache

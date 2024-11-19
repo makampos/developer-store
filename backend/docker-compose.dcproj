@@ -16,7 +16,4 @@
     <None Include="docker-compose.yml" />
     <None Include=".dockerignore" />
   </ItemGroup>
-  <ItemGroup>
-    <Content Include=".idea\.idea.Ambev.DeveloperEvaluation\.idea\.gitignore" />
-  </ItemGroup>
 </Project>
