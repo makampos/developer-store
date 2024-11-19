@@ -1,8 +1,0 @@
-{
-  "Ambev.DeveloperEvaluation.Application, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null": "\/Users\/mac\/RiderProjects\/developer-store\/backend\/src\/Ambev.DeveloperEvaluation.Application",
-  "Ambev.DeveloperEvaluation.Common, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null": "\/Users\/mac\/RiderProjects\/developer-store\/backend\/src\/Ambev.DeveloperEvaluation.Common",
-  "Ambev.DeveloperEvaluation.Domain, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null": "\/Users\/mac\/RiderProjects\/developer-store\/backend\/src\/Ambev.DeveloperEvaluation.Domain",
-  "Ambev.DeveloperEvaluation.IoC, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null": "\/Users\/mac\/RiderProjects\/developer-store\/backend\/src\/Ambev.DeveloperEvaluation.IoC",
-  "Ambev.DeveloperEvaluation.ORM, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null": "\/Users\/mac\/RiderProjects\/developer-store\/backend\/src\/Ambev.DeveloperEvaluation.ORM",
-  "Ambev.DeveloperEvaluation.WebApi, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null": "\/Users\/mac\/RiderProjects\/developer-store\/backend\/src\/Ambev.DeveloperEvaluation.WebApi"
-}
