@@ -32,7 +32,17 @@ public class ProductRepository : IProductRepository
 
     public async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        var product = await GetByIdAsync(id, cancellationToken);
+        if (product is null)
+        {
+            return false;
+        }
+
+        _context.Products.Remove(product);
+
+        var result = await _context.SaveChangesAsync(cancellationToken);
+
+        return result > 0;
     }
 
     public async Task<IEnumerable<Product>> GetAllAsync(CancellationToken cancellationToken = default)
@@ -42,6 +52,8 @@ public class ProductRepository : IProductRepository
 
     public async Task<Product> UpdateAsync(Product product, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        _context.Products.Update(product);
+        await _context.SaveChangesAsync(cancellationToken);
+        return product;
     }
 }
