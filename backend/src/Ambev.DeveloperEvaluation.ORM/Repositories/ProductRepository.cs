@@ -8,6 +8,8 @@ public class ProductRepository : IProductRepository
 {
     private readonly DefaultContext _context;
 
+    private DbSet<Product> Set => _context.Set<Product>();
+
     public ProductRepository(DefaultContext context)
     {
         _context = context;
@@ -45,9 +47,18 @@ public class ProductRepository : IProductRepository
         return result > 0;
     }
 
-    public async Task<IEnumerable<Product>> GetAllAsync(CancellationToken cancellationToken = default)
+    public async Task<PagedResult<Product>> GetAllAsync(
+        int pageNumber = 1,
+        int pageSize = 10,
+        CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        var totalCount = await SetAsNoTracking.CountAsync(cancellationToken);
+        var items = await SetAsNoTracking
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(cancellationToken);
+
+        return PagedResult<Product>.Create(items, totalCount, pageSize, pageNumber);
     }
 
     public async Task<Product> UpdateAsync(Product product, CancellationToken cancellationToken = default)
@@ -55,5 +66,15 @@ public class ProductRepository : IProductRepository
         _context.Products.Update(product);
         await _context.SaveChangesAsync(cancellationToken);
         return product;
+    }
+
+    private IQueryable<Product> SetAsNoTracking
+    {
+        get
+        {
+            var query = Set.AsNoTracking();
+
+            return query;
+        }
     }
 }

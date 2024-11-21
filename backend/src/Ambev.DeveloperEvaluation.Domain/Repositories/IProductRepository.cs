@@ -8,6 +8,9 @@ public interface IProductRepository
     Task<Product?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
     Task<Product?> GetByNameAsync(string name, CancellationToken cancellationToken = default);
     Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default);
-    Task<IEnumerable<Product>> GetAllAsync(CancellationToken cancellationToken = default);
+    Task<PagedResult<Product>> GetAllAsync(
+        int pageNumber = 1,
+        int pageSize = 10,
+        CancellationToken cancellationToken = default);
     Task<Product> UpdateAsync(Product product, CancellationToken cancellationToken = default);
 }
