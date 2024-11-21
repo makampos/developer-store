@@ -6,6 +6,8 @@ public class CreateProductRequestValidator : AbstractValidator<CreateProductRequ
 {
     public CreateProductRequestValidator()
     {
+        RuleLevelCascadeMode = CascadeMode.Stop;
+
         RuleFor(product => product.Title).NotEmpty().Length(3, 50);
         RuleFor(product => product.Price).GreaterThan(0);
         RuleFor(product => product.Description).NotEmpty().Length(3, 500);

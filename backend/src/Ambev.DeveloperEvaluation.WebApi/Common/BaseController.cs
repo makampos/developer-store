@@ -35,6 +35,9 @@ public class BaseController : ControllerBase
                 CurrentPage = pagedList.CurrentPage,
                 TotalPages = pagedList.TotalPages,
                 TotalCount = pagedList.TotalCount,
+                PageSize = pagedList.PageSize,
+                HasPreviousPage = pagedList.HasPrevious,
+                HasNextPage = pagedList.HasNext,
                 Success = true
             });
 }

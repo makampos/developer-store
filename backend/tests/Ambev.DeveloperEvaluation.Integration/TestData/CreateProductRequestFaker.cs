@@ -15,15 +15,15 @@ public class CreateProductRequestFaker
         .RuleFor(x => x.Rating, f => Rating.Create( f.Random.Int(1, 5),
             f.Random.Int(1, 100)));
 
-    public static CreateProductRequest GenerateValidRequest()
-    {
-        return createProductRequestFaker.Generate();
-    }
-
     public static CreateProductRequest GenerateInvalidRequest()
     {
         return createProductRequestFaker
             .RuleFor(x => x.Title, f => string.Empty) // override Title to be empty
             .Generate();
+    }
+
+    public static List<CreateProductRequest> GenerateValidRequests(int count)
+    {
+        return createProductRequestFaker.Generate(count);
     }
 }

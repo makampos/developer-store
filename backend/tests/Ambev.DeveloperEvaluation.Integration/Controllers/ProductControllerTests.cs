@@ -4,6 +4,7 @@ using Ambev.DeveloperEvaluation.Integration.Configurations;
 using Ambev.DeveloperEvaluation.Integration.TestData;
 using Ambev.DeveloperEvaluation.WebApi.Common;
 using Ambev.DeveloperEvaluation.WebApi.Features.Products.CreateProduct;
+using Ambev.DeveloperEvaluation.WebApi.Features.Products.GetAllProducts;
 using FluentAssertions;
 using Xunit;
 
@@ -26,7 +27,7 @@ public class ProductControllerTests : IClassFixture<CustomWebApplicationFactory>
     public async Task CreateProduct_WithValidRequest_ShouldReturnCreated()
     {
         // Given
-        var request = CreateProductRequestFaker.GenerateValidRequest();
+        var request = CreateProductRequestFaker.GenerateValidRequests(1)[0];
 
         // When
         var response = await _client.PostAsJsonAsync("/api/Product", request);
@@ -34,6 +35,11 @@ public class ProductControllerTests : IClassFixture<CustomWebApplicationFactory>
         // Then
         response.EnsureSuccessStatusCode();
         response.StatusCode.Should().Be(HttpStatusCode.Created);
+
+        var result = await response.Content.ReadFromJsonAsync<ApiResponseWithData<CreateProductResponse>>();
+
+        result!.Data!.Id.Should().NotBeEmpty();
+        result.Success.Should().BeTrue();
     }
 
     [Fact(DisplayName = "Given an invalid request, When creating a product, Should return BadRequest StatusCode")]
@@ -47,13 +53,15 @@ public class ProductControllerTests : IClassFixture<CustomWebApplicationFactory>
 
         // Then
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        var result = await response.Content.ReadAsStringAsync();
+        result.Should().NotBeNull();
     }
 
     [Fact(DisplayName = "Given a valid request, When updating a product, Should return Ok StatusCode")]
     public async Task UpdateProduct_WithValidRequest_ShouldReturnOk()
     {
         // Given
-        var createRequest = CreateProductRequestFaker.GenerateValidRequest();
+        var createRequest = CreateProductRequestFaker.GenerateValidRequests(1)[0];
         var createResponse = await _client.PostAsJsonAsync("/api/Product", createRequest);
         createResponse.EnsureSuccessStatusCode();
 
@@ -104,7 +112,7 @@ public class ProductControllerTests : IClassFixture<CustomWebApplicationFactory>
     public async Task DeleteProduct_WithValidRequest_ShouldReturnOk()
     {
         // Given
-        var createRequest = CreateProductRequestFaker.GenerateValidRequest();
+        var createRequest = CreateProductRequestFaker.GenerateValidRequests(1)[0];
         var createResponse = await _client.PostAsJsonAsync("/api/Product", createRequest);
         createResponse.EnsureSuccessStatusCode();
 
@@ -128,7 +136,7 @@ public class ProductControllerTests : IClassFixture<CustomWebApplicationFactory>
     public async Task GetProduct_WithValidRequest_ShouldReturnOk()
     {
         // Given
-        var createRequest = CreateProductRequestFaker.GenerateValidRequest();
+        var createRequest = CreateProductRequestFaker.GenerateValidRequests(1)[0];
         var createResponse = await _client.PostAsJsonAsync("/api/Product", createRequest);
         createResponse.EnsureSuccessStatusCode();
 
@@ -145,7 +153,8 @@ public class ProductControllerTests : IClassFixture<CustomWebApplicationFactory>
         response.EnsureSuccessStatusCode();
         response.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        var result = await response.Content.ReadAsStringAsync();
+        var jsonString = await response.Content.ReadAsStringAsync();
+        jsonString.Should().NotBeNull();
         //TODO: Improve ApiResponseWithData because currently returns two instances of 'data' property
     }
 
@@ -160,5 +169,61 @@ public class ProductControllerTests : IClassFixture<CustomWebApplicationFactory>
 
         // Then
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
+
+    [Fact(DisplayName = "Given a valid request, When getting all products, Should return Ok StatusCode")]
+    public async Task GetAllProducts_WithValidRequest_ShouldReturnOk()
+    {
+        // Given
+        var createdProductRequestList = CreateProductRequestFaker.GenerateValidRequests(6);
+
+        foreach (var cpr in createdProductRequestList)
+        {
+            var createResponse = await _client.PostAsJsonAsync("/api/Product", cpr);
+            createResponse.EnsureSuccessStatusCode();
+        }
+
+        var request = GetAllProductsRequest.Create(1,5);
+
+        // When
+        var response =
+            await _client.GetAsync($"/api/Product?pageNumber={request.PageNumber}&pageSize={request.PageSize}");
+
+
+        // Then
+        response.EnsureSuccessStatusCode();
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var jsonString = await response.Content.ReadAsStringAsync();
+        jsonString.Should().NotBeNull();
+
+        //TODO: Add assert to ensure pagination is executed right
+    }
+
+    [Fact(DisplayName =
+        "Given a valid request When getting all products with pageNumber and pageSize as null, Should return Ok StatusCode")]
+    public async Task GetAllProducts_WithoutRequestObject_ShouldSetDefaultValues_And_ShouldReturnOk()
+    {
+        // Given
+        var createdProductRequestList = CreateProductRequestFaker.GenerateValidRequests(2);
+
+        foreach (var cpr in createdProductRequestList)
+        {
+            var createResponse = await _client.PostAsJsonAsync("/api/Product", cpr);
+            createResponse.EnsureSuccessStatusCode();
+        }
+
+        // When
+        var response =
+            await _client.GetAsync($"/api/Product");
+
+        // Then
+        response.EnsureSuccessStatusCode();
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var jsonString = await response.Content.ReadAsStringAsync();
+        jsonString.Should().NotBeNull();
+
+        //TODO: Add assert to ensure pagination is executed right
     }
 }

@@ -1,10 +1,13 @@
 using Ambev.DeveloperEvaluation.Application.Products.CreateProduct;
 using Ambev.DeveloperEvaluation.Application.Products.DeleteProduct;
+using Ambev.DeveloperEvaluation.Application.Products.GetAllProducts;
 using Ambev.DeveloperEvaluation.Application.Products.GetProduct;
 using Ambev.DeveloperEvaluation.Application.Products.UpdateProduct;
+using Ambev.DeveloperEvaluation.Domain.Entities;
 using Ambev.DeveloperEvaluation.WebApi.Common;
 using Ambev.DeveloperEvaluation.WebApi.Features.Products.CreateProduct;
 using Ambev.DeveloperEvaluation.WebApi.Features.Products.DeleteProduct;
+using Ambev.DeveloperEvaluation.WebApi.Features.Products.GetAllProducts;
 using Ambev.DeveloperEvaluation.WebApi.Features.Products.GetProduct;
 using Ambev.DeveloperEvaluation.WebApi.Features.Products.UpdateProduct;
 using AutoMapper;
@@ -28,7 +31,39 @@ public class ProductController : BaseController
         _logger = logger;
     }
 
-    [HttpGet("{id:guid}")]
+    [HttpGet]
+    [ProducesResponseType(typeof(ApiResponseWithData<IEnumerable<GetAllProductsResponse>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> GetProductsAsync([FromQuery] GetAllProductsRequest request, CancellationToken
+        cancellationToken)
+    {
+        _logger.LogInformation("Controller {ProductController} triggered to handle {GetProductsRequest}",
+            nameof(ProductController), nameof(GetAllProductsRequest));
+
+        var validator = new GetAllProductsRequestValidator();
+        var validationResult = await validator.ValidateAsync(request, cancellationToken);
+
+        if (!validationResult.IsValid)
+        {
+            _logger.LogWarning("Validation failed for {GetProductsRequest}", nameof(GetAllProductsRequest));
+            return base.BadRequest(validationResult.Errors);
+        }
+
+        var command = _mapper.Map<GetAllProductsCommand>(request);
+        var response = await _mediator.Send(command, cancellationToken);
+
+        //TODO: Add mapper
+
+        var paginatedList = new PaginatedList<Product>(
+            (List<Product>)response.Products.Items,
+            response.Products.TotalCount,
+            response.Products.CurrentPage,
+            response.Products.PageSize);
+
+        return OkPaginated(paginatedList);
+    }
+
+    [HttpGet("{id:guid}", Name = nameof(GetProductAsync))]
     [ProducesResponseType(typeof(ApiResponseWithData<GetProductResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> GetProductAsync([FromRoute] Guid id, CancellationToken cancellationToken)
@@ -71,6 +106,7 @@ public class ProductController : BaseController
 
         if (!validationResult.IsValid)
         {
+            //TODO: Implement BadRequest correctly
             _logger.LogWarning($"Validation failed for {nameof(CreateProductRequest)}");
             return BadRequest(validationResult.Errors);
         }
@@ -78,12 +114,8 @@ public class ProductController : BaseController
         var command = _mapper.Map<CreateProductCommand>(request);
         var response = await _mediator.Send(command, cancellationToken);
 
-        return Created(string.Empty, new ApiResponseWithData<CreateProductResponse>
-        {
-            Success = true,
-            Message = "Product created successfully",
-            Data = _mapper.Map<CreateProductResponse>(response)
-        });
+        return Created(nameof(GetProductAsync),
+            new { id = response.Id }, _mapper.Map<CreateProductResponse>(response));
     }
 
     [HttpPut("{id:guid}")]
@@ -102,6 +134,7 @@ public class ProductController : BaseController
 
         if (!validationResult.IsValid)
         {
+            //TODO: Implement BadRequest correctly
             _logger.LogWarning("Validation failed for {UpdateProductRequest}", nameof(UpdateProductRequest));
             return base.BadRequest(validationResult.Errors);
         }
@@ -128,6 +161,7 @@ public class ProductController : BaseController
 
         if (!validationResult.IsValid)
         {
+            //TODO: Implement BadRequest correctly
             _logger.LogWarning("Validation failed for {DeleteProductRequest}", nameof(DeleteProductRequest));
             return base.BadRequest(validationResult.Errors);
         }
