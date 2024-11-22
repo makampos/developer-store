@@ -5,10 +5,10 @@ using Ambev.DeveloperEvaluation.Unit.Domain;
 using Ambev.DeveloperEvaluation.Unit.Domain.Products;
 using AutoMapper;
 using FluentAssertions;
+using FluentValidation;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Xunit;
-using ValidationException = FluentValidation.ValidationException;
 
 namespace Ambev.DeveloperEvaluation.Unit.Application.Products;
 
@@ -66,34 +66,31 @@ public class UpdateProductHandlerTests
             commandToCreateProduct.Rating);
 
         product.Id = commandToUpdateProduct.Id;
-        var result = UpdateProductResult.Create(product.Id, commandToUpdateProduct.Title, commandToUpdateProduct.Price,
+
+        var updateProductResult = UpdateProductResult.Create(product.Id, commandToUpdateProduct.Title, commandToUpdateProduct
+            .Price,
             commandToUpdateProduct.Description, commandToUpdateProduct.Category, commandToUpdateProduct.Image,
             commandToUpdateProduct.Rating);
 
         _productRepository.GetByIdAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>()).Returns(product);
-        _mapper.Map<Product>(commandToUpdateProduct).Returns(product);
-        _mapper.Map<UpdateProductResult>(product).Returns(result);
+        _mapper.Map<UpdateProductResult>(product).Returns(updateProductResult);
         _productRepository.UpdateAsync(product, Arg.Any<CancellationToken>()).Returns(product);
 
         // When
-        var updateProductResult = await _handler.Handle(commandToUpdateProduct, CancellationToken.None);
+        var result = await _handler.Handle(commandToUpdateProduct, CancellationToken.None);
 
         // Then
-        _mapper.Received(1).Map<Product>(Arg.Is<UpdateProductCommand>(c =>
-            c.Id == commandToUpdateProduct.Id &&
-            c.Title == commandToUpdateProduct.Title &&
-            c.Price == commandToUpdateProduct.Price &&
-            c.Description == commandToUpdateProduct.Description &&
-            c.Category == commandToUpdateProduct.Category &&
-            c.Image == commandToUpdateProduct.Image &&
-            c.Rating == commandToUpdateProduct.Rating
-        ));
-
         _mapper.Received(1).Map<UpdateProductResult>(Arg.Is<Product>(p =>
-            p.Id == product.Id
+            p.Id == product.Id &&
+            p.Title == product.Title &&
+            p.Price == product.Price &&
+            p.Description == product.Description &&
+            p.Category == product.Category &&
+            p.Image == product.Image &&
+            p.Rating == product.Rating
         ));
 
-        updateProductResult.Should().NotBeNull();
-        updateProductResult.Should().BeEquivalentTo(result);
+        result.Should().NotBeNull();
+        result.Should().BeEquivalentTo(updateProductResult);
     }
 }

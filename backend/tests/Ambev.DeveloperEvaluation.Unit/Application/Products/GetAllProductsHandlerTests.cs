@@ -1,4 +1,5 @@
 using Ambev.DeveloperEvaluation.Application.Products.GetAllProducts;
+using Ambev.DeveloperEvaluation.Application.Products.GetProduct;
 using Ambev.DeveloperEvaluation.Domain.Entities;
 using Ambev.DeveloperEvaluation.Domain.Repositories;
 using Ambev.DeveloperEvaluation.Unit.Application.TestData.Products;
@@ -31,18 +32,33 @@ public class GetAllProductsHandlerTests
         // Given
         var listOfProducts = GetAllProductsHandlerTestData.GetAllProducts(20);
         var request = GetAllProductsCommand.Create(1, 10);
-        var pagedResult = PagedResult<Product>.Create(listOfProducts[..10], 20, 10, 1);
+        var pagedResultOfProducts = PagedResult<Product>.Create(listOfProducts[..10], 20, 10, 1);
 
         _productRepository.GetAllAsync(Arg.Any<int>(), Arg.Any<int>(),
-            Arg.Any<CancellationToken>()).Returns(pagedResult);
+            Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(pagedResultOfProducts);
 
-        _mapper.Map<GetAllProductsResult>(pagedResult).Returns(new GetAllProductsResult(pagedResult));
+        var getProductResult = pagedResultOfProducts.Items!.Select(x
+                => new GetProductResult( x.Id, x.Title, x.Price, x.Description, x.Category, x.Image, x.Rating)).ToList();
+
+        var getAllProductsResult = PagedResult<GetProductResult>.Create(
+            items: getProductResult,
+            totalCount: pagedResultOfProducts.TotalCount,
+            pageSize: pagedResultOfProducts.PageSize,
+            currentPage: pagedResultOfProducts.CurrentPage);
+
+        var resultMap = new GetAllProductsResult(getAllProductsResult);
+
+        _mapper.Map<GetAllProductsResult>(pagedResultOfProducts).Returns(resultMap);
 
         // When
         var result = await _handler.Handle(request, CancellationToken.None);
 
         // Then
-        _mapper.Received(1).Map<GetAllProductsResult>(pagedResult);
+        _mapper.Received(1).Map<GetAllProductsResult>(Arg.Is<PagedResult<Product>>(x =>
+            x.Items!.Count == 10 &&
+            x.TotalCount == 20 &&
+            x.PageSize == 10 &&
+            x.CurrentPage == 1));
 
         result.Should().NotBeNull();
         result.Products.Should().NotBeNull();
@@ -61,20 +77,31 @@ public class GetAllProductsHandlerTests
     {
         // Given
         var request = GetAllProductsCommand.Create(1, 10);
-        var listOfProducts = GetAllProductsHandlerTestData.GetAllProducts(0);
-        var pagedResult = PagedResult<Product>.Create(listOfProducts, 0, 10, 1);
+        var pagedResultOfProducts = PagedResult<Product>.Create(new List<Product>(), 0, 10, 1);
 
         _productRepository.GetAllAsync(Arg.Any<int>(), Arg.Any<int>(),
-            Arg.Any<CancellationToken>()).Returns(pagedResult);
+            Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(pagedResultOfProducts);
 
-        _mapper.Map<GetAllProductsResult>(pagedResult).Returns(new GetAllProductsResult(pagedResult));
+        var getAllProductsResult = PagedResult<GetProductResult>.Create(
+            items: new List<GetProductResult>(),
+            totalCount: pagedResultOfProducts.TotalCount,
+            pageSize: pagedResultOfProducts.PageSize,
+            currentPage: pagedResultOfProducts.CurrentPage);
+
+        var resultMap = new GetAllProductsResult(getAllProductsResult);
+
+        _mapper.Map<GetAllProductsResult>(pagedResultOfProducts).Returns(resultMap);
 
         // When
         var result = await _handler.Handle(request, CancellationToken.None);
 
         // Then
 
-        _mapper.Received(1).Map<GetAllProductsResult>(pagedResult);
+        _mapper.Received(1).Map<GetAllProductsResult>(Arg.Is<PagedResult<Product>>(x =>
+            x.Items!.Count == 0 &&
+            x.TotalCount == 0 &&
+            x.PageSize == 10 &&
+            x.CurrentPage == 1));
 
         result.Should().NotBeNull();
         result.Products.Should().NotBeNull();

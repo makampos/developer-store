@@ -26,13 +26,11 @@ public class GetAllProductsHandler : IRequestHandler<GetAllProductsCommand, GetA
 
         //TODO: Implement Validator
 
-        var products = await _productRepository.GetAllAsync(command.PageNumber, command.PageSize,
-            cancellationToken);
+        var pagedResultOfProducts = await _productRepository.GetAllAsync(command.PageNumber, command.PageSize,
+            command.Order, cancellationToken);
 
         _logger.LogInformation("Products retrieved successfully");
 
-        var mapped = _mapper.Map<GetAllProductsResult>(products);
-
-        return mapped;
+        return _mapper.Map<GetAllProductsResult>(pagedResultOfProducts);
     }
 }
