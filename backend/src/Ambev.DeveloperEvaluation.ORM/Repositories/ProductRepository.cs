@@ -134,6 +134,14 @@ public class ProductRepository : IProductRepository
         return product;
     }
 
+    public async Task<IReadOnlyList<string>> GetCategoriesAsync(CancellationToken cancellationToken = default)
+    {
+        return await SetAsNoTracking
+            .Select(x => x.Category)
+            .Distinct()
+            .ToListAsync(cancellationToken);;
+    }
+
     private IQueryable<Product> SetAsNoTracking
     {
         get

@@ -327,5 +327,33 @@ public class ProductControllerTests : IClassFixture<CustomWebApplicationFactory>
         result.Success.Should().BeTrue();
         result.Message.Should().BeEmpty();
     }
+
+    [Fact(DisplayName = "Given a valid request, When getting all product categories, should return Ok StatusCode")]
+    public async Task GetAllCategories_WithValidRequest_ShouldReturnOk()
+    {
+        // Given
+        var createdProductRequestList = CreateProductRequestFaker.GenerateValidRequests(3);
+
+        foreach (var cpr in createdProductRequestList)
+        {
+            var createResponse = await _client.PostAsJsonAsync("/api/Product", cpr);
+            createResponse.EnsureSuccessStatusCode();
+        }
+
+        // When
+        var response =
+            await _client.GetAsync($"/api/Product/categories");
+
+        // Then
+        response.EnsureSuccessStatusCode();
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var result = await response.Content.ReadFromJsonAsync<ApiResponseWithData<IReadOnlyList<string>>>();
+        result.Should().NotBeNull();
+        result!.Data.Should().NotBeEmpty();
+        result.Success.Should().BeTrue();
+        result.Message.Should().Be("Categories retrieved successfully");
+        result.Errors.Should().BeEmpty();
+    }
 }
 

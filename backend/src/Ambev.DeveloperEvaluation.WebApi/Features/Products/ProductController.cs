@@ -1,9 +1,11 @@
+using Ambev.DeveloperEvaluation.Application.Products.Categories;
 using Ambev.DeveloperEvaluation.Application.Products.CreateProduct;
 using Ambev.DeveloperEvaluation.Application.Products.DeleteProduct;
 using Ambev.DeveloperEvaluation.Application.Products.GetAllProducts;
 using Ambev.DeveloperEvaluation.Application.Products.GetProduct;
 using Ambev.DeveloperEvaluation.Application.Products.UpdateProduct;
 using Ambev.DeveloperEvaluation.WebApi.Common;
+using Ambev.DeveloperEvaluation.WebApi.Features.Products.Categories.GetAllCategories;
 using Ambev.DeveloperEvaluation.WebApi.Features.Products.CreateProduct;
 using Ambev.DeveloperEvaluation.WebApi.Features.Products.DeleteProduct;
 using Ambev.DeveloperEvaluation.WebApi.Features.Products.GetAllProducts;
@@ -168,6 +170,24 @@ public class ProductController : BaseController
         {
             Success = response.Success,
             Message = "Product deleted successfully"
+        });
+    }
+
+    [HttpGet("categories")]
+    [ProducesResponseType(typeof(ApiResponseWithData<IReadOnlyList<string>>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetCategoriesAsync(CancellationToken cancellationToken)
+    {
+        _logger.LogInformation("Controller {ProductController} triggered to handle {GetAllCategoriesRequest}",
+            nameof(ProductController),nameof(GetAllCategoriesRequest));
+
+        var command = new GetAllProductCategoriesCommand();
+        var result = await _mediator.Send(command, cancellationToken);
+
+        return Ok(new ApiResponseWithData<IReadOnlyList<string>>()
+        {
+            Data = result.ProductCategories,
+            Success = true,
+            Message = "Categories retrieved successfully"
         });
     }
 }
