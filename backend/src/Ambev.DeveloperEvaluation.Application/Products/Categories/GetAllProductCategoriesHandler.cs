@@ -16,7 +16,7 @@ public class GetAllProductCategoriesHandler : IRequestHandler<GetAllProductCateg
 
     public async Task<GetAllProductCategoriesResult> Handle(GetAllProductCategoriesCommand command, CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Handler {GetCategoriesHandler} triggered to handle  {GetCategoriesCommand}",
+        _logger.LogInformation("Handler {GetCategoriesHandler} triggered to handle  {GetAllProductCategoriesCommand}",
             nameof(GetAllProductCategoriesHandler), nameof(GetAllProductCategoriesCommand));
 
         var productCategories = await _productRepository.GetCategoriesAsync(cancellationToken);
