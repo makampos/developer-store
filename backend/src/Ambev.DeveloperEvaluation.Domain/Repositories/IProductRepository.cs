@@ -11,6 +11,7 @@ public interface IProductRepository
     Task<PagedResult<Product>> GetAllAsync(
         int pageNumber = 1,
         int pageSize = 10,
+        string? order = null,
         CancellationToken cancellationToken = default);
     Task<Product> UpdateAsync(Product product, CancellationToken cancellationToken = default);
 }

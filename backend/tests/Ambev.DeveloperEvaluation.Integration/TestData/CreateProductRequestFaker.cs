@@ -8,7 +8,7 @@ public class CreateProductRequestFaker
 {
     private static readonly Faker<CreateProductRequest> createProductRequestFaker = new Faker<CreateProductRequest>()
         .RuleFor(x => x.Title, f => f.Commerce.ProductName())
-        .RuleFor(x => x.Price, f => f.Random.Decimal(1, 1000))
+        .RuleFor(x => x.Price, f => f.Finance.Amount())
         .RuleFor(x => x.Description, f => f.Commerce.ProductDescription())
         .RuleFor(x => x.Category, f => f.Commerce.Categories(1)[0])
         .RuleFor(x => x.Image, f => f.Image.PicsumUrl())
@@ -18,12 +18,20 @@ public class CreateProductRequestFaker
     public static CreateProductRequest GenerateInvalidRequest()
     {
         return createProductRequestFaker
-            .RuleFor(x => x.Title, f => string.Empty) // override Title to be empty
+            .RuleFor(x => x.Title, f => string.Empty)
             .Generate();
     }
 
     public static List<CreateProductRequest> GenerateValidRequests(int count)
     {
         return createProductRequestFaker.Generate(count);
+    }
+
+    public static List<CreateProductRequest> GenerateValidRequestsWithTies(int count)
+    {
+        var price = createProductRequestFaker.Generate().Price;
+        return createProductRequestFaker
+            .RuleFor(x => x.Price, f => f.Finance.Amount(price, price))
+            .Generate(count);
     }
 }

@@ -47,19 +47,85 @@ public class ProductRepository : IProductRepository
         return result > 0;
     }
 
-    public async Task<PagedResult<Product>> GetAllAsync(
-        int pageNumber = 1,
-        int pageSize = 10,
-        CancellationToken cancellationToken = default)
-    {
-        var totalCount = await SetAsNoTracking.CountAsync(cancellationToken);
-        var items = await SetAsNoTracking
-            .Skip((pageNumber - 1) * pageSize)
-            .Take(pageSize)
-            .ToListAsync(cancellationToken);
+   public async Task<PagedResult<Product>> GetAllAsync(
+    int pageNumber = 1,
+    int pageSize = 10,
+    string? order = null,
+    CancellationToken cancellationToken = default)
+{
+    var query = SetAsNoTracking;
 
-        return PagedResult<Product>.Create(items, totalCount, pageSize, pageNumber);
+    if (!string.IsNullOrEmpty(order))
+    {
+        var orderedQueryable = query as IOrderedQueryable<Product>;
+
+        var orderByFields = order.Split([','], StringSplitOptions.RemoveEmptyEntries);
+
+        var isFirstOrdering = true;
+
+        foreach (var field in orderByFields)
+        {
+            var trimmedField = field.Trim();
+
+            if (trimmedField.EndsWith(" desc", StringComparison.OrdinalIgnoreCase))
+            {
+                trimmedField = trimmedField.Substring(0, trimmedField.Length - 5).Trim();
+                trimmedField = char.ToUpper(trimmedField[0]) + trimmedField.Substring(1);
+
+                if (isFirstOrdering)
+                {
+                    orderedQueryable = orderedQueryable.OrderByDescending(p => EF.Property<object>(p, trimmedField));
+                    isFirstOrdering = false;
+                }
+                else
+                {
+                    orderedQueryable = orderedQueryable.ThenByDescending(p => EF.Property<object>(p, trimmedField));
+                }
+            }
+
+            else if (trimmedField.EndsWith(" asc", StringComparison.OrdinalIgnoreCase))
+            {
+                trimmedField = trimmedField.Substring(0, trimmedField.Length - 4).Trim();
+                trimmedField = char.ToUpper(trimmedField[0]) + trimmedField.Substring(1);
+
+                if (isFirstOrdering)
+                {
+                    orderedQueryable = orderedQueryable.OrderBy(p => EF.Property<object>(p, trimmedField));
+                    isFirstOrdering = false;
+                }
+                else
+                {
+                    orderedQueryable = orderedQueryable.ThenBy(p => EF.Property<object>(p, trimmedField));
+
+                }
+            }
+            else
+            {
+                trimmedField = char.ToUpper(trimmedField[0]) + trimmedField.Substring(1);
+
+                if (isFirstOrdering)
+                {
+                    orderedQueryable = orderedQueryable.OrderBy(p => EF.Property<object>(p, trimmedField));
+                    isFirstOrdering = false;
+                }
+                else
+                {
+                    orderedQueryable = orderedQueryable.ThenBy(p => EF.Property<object>(p, trimmedField));
+                }
+            }
+        }
+
+        query = orderedQueryable;
     }
+
+    var totalCount = await query!.CountAsync(cancellationToken);
+    var items = await query!
+        .Skip((pageNumber - 1) * pageSize)
+        .Take(pageSize)
+        .ToListAsync(cancellationToken);
+
+    return PagedResult<Product>.Create(items, totalCount, pageSize, pageNumber);
+}
 
     public async Task<Product> UpdateAsync(Product product, CancellationToken cancellationToken = default)
     {
