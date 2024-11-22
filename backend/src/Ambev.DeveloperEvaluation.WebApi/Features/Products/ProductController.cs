@@ -3,7 +3,6 @@ using Ambev.DeveloperEvaluation.Application.Products.DeleteProduct;
 using Ambev.DeveloperEvaluation.Application.Products.GetAllProducts;
 using Ambev.DeveloperEvaluation.Application.Products.GetProduct;
 using Ambev.DeveloperEvaluation.Application.Products.UpdateProduct;
-using Ambev.DeveloperEvaluation.Domain.Entities;
 using Ambev.DeveloperEvaluation.WebApi.Common;
 using Ambev.DeveloperEvaluation.WebApi.Features.Products.CreateProduct;
 using Ambev.DeveloperEvaluation.WebApi.Features.Products.DeleteProduct;
@@ -32,7 +31,7 @@ public class ProductController : BaseController
     }
 
     [HttpGet]
-    [ProducesResponseType(typeof(ApiResponseWithData<IEnumerable<GetAllProductsResponse>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(PaginatedResponse<GetProductResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> GetProductsAsync([FromQuery] GetAllProductsRequest request, CancellationToken
         cancellationToken)
@@ -50,17 +49,13 @@ public class ProductController : BaseController
         }
 
         var command = _mapper.Map<GetAllProductsCommand>(request);
-        var response = await _mediator.Send(command, cancellationToken);
+        var result = await _mediator.Send(command, cancellationToken);
 
-        //TODO: Add mapper
-
-        var paginatedList = new PaginatedList<Product>(
-            (List<Product>)response.Products.Items,
-            response.Products.TotalCount,
-            response.Products.CurrentPage,
-            response.Products.PageSize);
-
-        return OkPaginated(paginatedList);
+        return OkPaginated(new PaginatedList<GetProductResponse>(
+            _mapper.Map<List<GetProductResponse>>(result.Products.Items),
+            result.Products.TotalCount,
+            result.Products.CurrentPage,
+            result.Products.PageSize));
     }
 
     [HttpGet("{id:guid}", Name = nameof(GetProductAsync))]

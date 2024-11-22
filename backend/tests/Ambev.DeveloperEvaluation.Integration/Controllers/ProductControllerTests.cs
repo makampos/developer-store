@@ -5,6 +5,7 @@ using Ambev.DeveloperEvaluation.Integration.TestData;
 using Ambev.DeveloperEvaluation.WebApi.Common;
 using Ambev.DeveloperEvaluation.WebApi.Features.Products.CreateProduct;
 using Ambev.DeveloperEvaluation.WebApi.Features.Products.GetAllProducts;
+using Ambev.DeveloperEvaluation.WebApi.Features.Products.GetProduct;
 using FluentAssertions;
 using Xunit;
 
@@ -137,25 +138,28 @@ public class ProductControllerTests : IClassFixture<CustomWebApplicationFactory>
     {
         // Given
         var createRequest = CreateProductRequestFaker.GenerateValidRequests(1)[0];
-        var createResponse = await _client.PostAsJsonAsync("/api/Product", createRequest);
-        createResponse.EnsureSuccessStatusCode();
+        var createdResponse = await _client.PostAsJsonAsync("/api/Product", createRequest);
+        createdResponse.EnsureSuccessStatusCode();
 
-        var createdProductResponse = await createResponse.Content
-            .ReadFromJsonAsync<ApiResponseWithData<CreateProductResponse>>()
-            .ContinueWith(x => x.Result!.Data!);
+        var createdProductResponse = await createdResponse.Content
+            .ReadFromJsonAsync<ApiResponseWithData<CreateProductResponse>>();
 
-        var id = createdProductResponse.Id;
+        var id = createdProductResponse!.Data!.Id;
 
         // When
-        var response = await _client.GetAsync($"/api/Product/{id}");
+        var getResponse = await _client.GetAsync($"/api/Product/{id}");
 
         // Then
-        response.EnsureSuccessStatusCode();
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        getResponse.EnsureSuccessStatusCode();
+        getResponse.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        var jsonString = await response.Content.ReadAsStringAsync();
-        jsonString.Should().NotBeNull();
-        //TODO: Improve ApiResponseWithData because currently returns two instances of 'data' property
+        var getProductResponse = await getResponse.Content.ReadFromJsonAsync<ApiResponseWithData<GetProductResponse>>();
+
+        getProductResponse.Should().NotBeNull();
+        getProductResponse!.Success.Should().BeTrue();
+        getProductResponse.Message.Should().Be("Product retrieved successfully");
+        getProductResponse.Data.Should().BeEquivalentTo(createRequest);
+        getProductResponse.Errors.Should().BeEmpty();
     }
 
     [Fact(DisplayName = "Given an invalid request, When getting a product, Should return BadRequest StatusCode")]
@@ -194,10 +198,15 @@ public class ProductControllerTests : IClassFixture<CustomWebApplicationFactory>
         response.EnsureSuccessStatusCode();
         response.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        var jsonString = await response.Content.ReadAsStringAsync();
-        jsonString.Should().NotBeNull();
-
-        //TODO: Add assert to ensure pagination is executed right
+        var result = await response.Content.ReadFromJsonAsync<PaginatedResponse<GetProductResponse>>();
+        result.Should().NotBeNull();
+        result!.PageSize.Should().Be(5);
+        result.TotalCount.Should().Be(6);
+        result.TotalPages.Should().Be(2);
+        result.Data.Should().HaveCount(5);
+        result.CurrentPage.Should().Be(1);
+        result.HasNextPage.Should().BeTrue();
+        result.HasPreviousPage.Should().BeFalse();
     }
 
     [Fact(DisplayName =
@@ -221,9 +230,102 @@ public class ProductControllerTests : IClassFixture<CustomWebApplicationFactory>
         response.EnsureSuccessStatusCode();
         response.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        var jsonString = await response.Content.ReadAsStringAsync();
-        jsonString.Should().NotBeNull();
+        var result = await response.Content.ReadFromJsonAsync<PaginatedResponse<GetProductResponse>>();
+        result.Should().NotBeNull();
+        result!.PageSize.Should().Be(10);
+        result.TotalCount.Should().Be(2);
+        result.TotalPages.Should().Be(1);
+        result.Data.Should().HaveCount(2);
+        result.CurrentPage.Should().Be(1);
+        result.HasNextPage.Should().BeFalse();
+        result.HasPreviousPage.Should().BeFalse();
+    }
 
-        //TODO: Add assert to ensure pagination is executed right
+
+    [Fact(DisplayName = "Given a valid request, When getting all products ordered, Should return Ok StatusCode," +
+                        " and ordered list by price descending and title ascending")]
+    public async Task GetAllProducts_WithValidRequestAndOrder_ShouldReturnOk()
+    {
+        // Given
+        var createdProductRequestList = CreateProductRequestFaker.GenerateValidRequests(3);
+
+        foreach (var cpr in createdProductRequestList)
+        {
+            var createResponse = await _client.PostAsJsonAsync("/api/Product", cpr);
+            createResponse.EnsureSuccessStatusCode();
+        }
+
+        var request = GetAllProductsRequest.Create(1, 5, "price desc, title asc");
+
+        // When
+        var response =
+            await _client.GetAsync(
+                $"/api/Product?pageNumber={request.PageNumber}&pageSize={request.PageSize}&order={request.Order}");
+
+        // Then
+        response.EnsureSuccessStatusCode();
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var orderedList = createdProductRequestList
+            .OrderByDescending(x => x.Price)
+            .ThenBy(x => x.Title)
+            .ToList();
+
+        var result = await response.Content.ReadFromJsonAsync<PaginatedResponse<GetProductResponse>>();
+        result.Should().NotBeNull();
+        result!.Data.Should().BeEquivalentTo(orderedList, "because the list should be ordered by price " +
+                                                          "descending and title ascending");
+        result.PageSize.Should().Be(5);
+        result.TotalCount.Should().Be(3);
+        result.TotalPages.Should().Be(1);
+        result.CurrentPage.Should().Be(1);
+        result.HasNextPage.Should().BeFalse();
+        result.HasPreviousPage.Should().BeFalse();
+        result.Success.Should().BeTrue();
+    }
+
+    [Fact(DisplayName = "Given a valid request, When getting all products ordered, and there are ties in price, " +
+                        "should return Ok StatusCode, and ordered list applied primary order by price descending and " +
+                        "secondary order by title ascending")]
+    public async Task GetAllProducts_WithValidRequestAndOrderAndTieInPrice_ShouldReturnOk()
+    {
+        // Given
+        var createdProductRequestList = CreateProductRequestFaker.GenerateValidRequestsWithTies(3);
+
+        foreach (var cpr in createdProductRequestList)
+        {
+            var createResponse = await _client.PostAsJsonAsync("/api/Product", cpr);
+            createResponse.EnsureSuccessStatusCode();
+        }
+
+        var request = GetAllProductsRequest.Create(1, 5, "price desc, title asc");
+
+        // When
+        var response =
+            await _client.GetAsync(
+                $"/api/Product?pageNumber={request.PageNumber}&pageSize={request.PageSize}&order={request.Order}");
+
+        // Then
+        response.EnsureSuccessStatusCode();
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var orderedList = createdProductRequestList
+            .OrderByDescending(x => x.Price)
+            .ThenBy(x => x.Title)
+            .ToList();
+
+        var result = await response.Content.ReadFromJsonAsync<PaginatedResponse<GetProductResponse>>();
+        result.Should().NotBeNull();
+        result!.Data.Should().BeEquivalentTo(orderedList, "because the list should be ordered primarily by price and " +
+                                                          "secondarily by title when there are ties in price");
+        result.PageSize.Should().Be(5);
+        result.TotalCount.Should().Be(3);
+        result.TotalPages.Should().Be(1);
+        result.CurrentPage.Should().Be(1);
+        result.HasNextPage.Should().BeFalse();
+        result.HasPreviousPage.Should().BeFalse();
+        result.Success.Should().BeTrue();
+        result.Message.Should().BeEmpty();
     }
 }
+

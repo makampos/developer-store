@@ -14,7 +14,7 @@ public class BaseController : ControllerBase
         User.FindFirst(ClaimTypes.Email)?.Value ?? throw new NullReferenceException();
 
     protected IActionResult Ok<T>(T data) =>
-            base.Ok(new ApiResponseWithData<T> { Data = data, Success = true });
+            base.Ok(data);
 
     protected IActionResult Ok(ApiResponse apiResponse) =>
         base.Ok(new ApiResponse { Message = apiResponse.Message, Success = apiResponse.Success });
