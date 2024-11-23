@@ -12,7 +12,8 @@ public interface IProductRepository
         int pageNumber = 1,
         int pageSize = 10,
         string? order = null,
-        CancellationToken cancellationToken = default);
+        string? category = null,
+    CancellationToken cancellationToken = default);
     Task<Product> UpdateAsync(Product product, CancellationToken cancellationToken = default);
 
     Task<IReadOnlyList<string>> GetCategoriesAsync(CancellationToken cancellationToken = default);

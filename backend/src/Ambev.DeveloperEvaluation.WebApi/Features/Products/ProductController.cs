@@ -2,6 +2,7 @@ using Ambev.DeveloperEvaluation.Application.Products.Categories;
 using Ambev.DeveloperEvaluation.Application.Products.CreateProduct;
 using Ambev.DeveloperEvaluation.Application.Products.DeleteProduct;
 using Ambev.DeveloperEvaluation.Application.Products.GetAllProducts;
+using Ambev.DeveloperEvaluation.Application.Products.GetAllProductsByCategory;
 using Ambev.DeveloperEvaluation.Application.Products.GetProduct;
 using Ambev.DeveloperEvaluation.Application.Products.UpdateProduct;
 using Ambev.DeveloperEvaluation.WebApi.Common;
@@ -9,6 +10,7 @@ using Ambev.DeveloperEvaluation.WebApi.Features.Products.Categories.GetAllCatego
 using Ambev.DeveloperEvaluation.WebApi.Features.Products.CreateProduct;
 using Ambev.DeveloperEvaluation.WebApi.Features.Products.DeleteProduct;
 using Ambev.DeveloperEvaluation.WebApi.Features.Products.GetAllProducts;
+using Ambev.DeveloperEvaluation.WebApi.Features.Products.GetAllProductsByCategory;
 using Ambev.DeveloperEvaluation.WebApi.Features.Products.GetProduct;
 using Ambev.DeveloperEvaluation.WebApi.Features.Products.UpdateProduct;
 using AutoMapper;
@@ -189,5 +191,35 @@ public class ProductController : BaseController
             Success = true,
             Message = "Categories retrieved successfully"
         });
+    }
+
+    [HttpGet("category/{category}")]
+    [ProducesResponseType(typeof(PaginatedResponse<GetProductResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> GetAllProductsByCategoryAsync([FromRoute] string category, [FromQuery]
+        GetAllProductsByCategoryRequest request, CancellationToken cancellationToken)
+    {
+        _logger.LogInformation("Controller {ProductController} triggered to handle {GetProductsByCategoryRequest}",
+            nameof(ProductController), nameof(GetAllProductsByCategoryRequest));
+
+        request = request.IncludeCategory(category);
+
+        var validator = new GetAllProductsByCategoryRequestValidator();
+        var validationResult = await validator.ValidateAsync(request, cancellationToken);
+
+        if (!validationResult.IsValid)
+        {
+            _logger.LogWarning("Validation failed for {GetProductsByCategoryRequest}", nameof(GetAllProductsByCategoryRequest));
+            return base.BadRequest(validationResult.Errors);
+        }
+
+        var command = _mapper.Map<GetAllProductsByCategoryCommand>(request);
+        var result = await _mediator.Send(command, cancellationToken);
+
+        return OkPaginated(new PaginatedList<GetProductResponse>(
+            _mapper.Map<List<GetProductResponse>>(result.Products.Items),
+            result.Products.TotalCount,
+            result.Products.CurrentPage,
+            result.Products.PageSize));
     }
 }

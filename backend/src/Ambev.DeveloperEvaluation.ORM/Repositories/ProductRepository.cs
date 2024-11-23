@@ -51,9 +51,15 @@ public class ProductRepository : IProductRepository
     int pageNumber = 1,
     int pageSize = 10,
     string? order = null,
+    string? category = null,
     CancellationToken cancellationToken = default)
 {
     var query = SetAsNoTracking;
+
+    if (!string.IsNullOrEmpty(category))
+    {
+        query = query.Where(p => p.Category == category);
+    }
 
     if (!string.IsNullOrEmpty(order))
     {

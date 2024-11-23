@@ -35,7 +35,7 @@ public class GetAllProductsHandlerTests
         var pagedResultOfProducts = PagedResult<Product>.Create(listOfProducts[..10], 20, 10, 1);
 
         _productRepository.GetAllAsync(Arg.Any<int>(), Arg.Any<int>(),
-            Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(pagedResultOfProducts);
+            Arg.Any<string>(), cancellationToken: Arg.Any<CancellationToken>()).Returns(pagedResultOfProducts);
 
         var getProductResult = pagedResultOfProducts.Items!.Select(x
                 => new GetProductResult( x.Id, x.Title, x.Price, x.Description, x.Category, x.Image, x.Rating)).ToList();
@@ -80,7 +80,7 @@ public class GetAllProductsHandlerTests
         var pagedResultOfProducts = PagedResult<Product>.Create(new List<Product>(), 0, 10, 1);
 
         _productRepository.GetAllAsync(Arg.Any<int>(), Arg.Any<int>(),
-            Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(pagedResultOfProducts);
+            Arg.Any<string>(), cancellationToken: Arg.Any<CancellationToken>()).Returns(pagedResultOfProducts);
 
         var getAllProductsResult = PagedResult<GetProductResult>.Create(
             items: new List<GetProductResult>(),

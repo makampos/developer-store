@@ -27,7 +27,7 @@ public class GetAllProductsHandler : IRequestHandler<GetAllProductsCommand, GetA
         //TODO: Implement Validator
 
         var pagedResultOfProducts = await _productRepository.GetAllAsync(command.PageNumber, command.PageSize,
-            command.Order, cancellationToken);
+            command.Order, cancellationToken: cancellationToken);
 
         _logger.LogInformation("Products retrieved successfully");
 

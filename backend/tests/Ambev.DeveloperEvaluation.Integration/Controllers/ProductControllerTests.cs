@@ -5,6 +5,7 @@ using Ambev.DeveloperEvaluation.Integration.TestData;
 using Ambev.DeveloperEvaluation.WebApi.Common;
 using Ambev.DeveloperEvaluation.WebApi.Features.Products.CreateProduct;
 using Ambev.DeveloperEvaluation.WebApi.Features.Products.GetAllProducts;
+using Ambev.DeveloperEvaluation.WebApi.Features.Products.GetAllProductsByCategory;
 using Ambev.DeveloperEvaluation.WebApi.Features.Products.GetProduct;
 using FluentAssertions;
 using Xunit;
@@ -354,6 +355,44 @@ public class ProductControllerTests : IClassFixture<CustomWebApplicationFactory>
         result.Success.Should().BeTrue();
         result.Message.Should().Be("Categories retrieved successfully");
         result.Errors.Should().BeEmpty();
+    }
+
+    [Fact(DisplayName = "Given a valid request, When getting all product by category, should return Ok StatusCode")]
+    public async Task GetProductsByCategory_WithValidRequest_ShouldReturnOk()
+    {
+        // Given
+        var createdProductRequestList = CreateProductRequestFaker.GenerateValidRequests(2);
+
+        foreach (var cpr in createdProductRequestList)
+        {
+            var createResponse = await _client.PostAsJsonAsync("/api/Product", cpr);
+            createResponse.EnsureSuccessStatusCode();
+        }
+
+        var category = createdProductRequestList[0].Category;
+
+        var request = GetAllProductsByCategoryRequest.Create(category,1, 5);
+
+        // When
+        var response =
+            await _client.GetAsync($"/api/Product/category/{category}?pageNumber={request.PageNumber}&pageSize={request.PageSize}");
+
+        // Then
+        response.EnsureSuccessStatusCode();
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var result = await response.Content.ReadFromJsonAsync<PaginatedResponse<GetProductResponse>>();
+        result.Should().NotBeNull();
+        result!.Data.Should().NotBeEmpty();
+        result.Success.Should().BeTrue();
+        result.Errors.Should().BeEmpty();
+        result.Message.Should().BeEmpty();
+        result.PageSize.Should().Be(5);
+        result.TotalCount.Should().Be(1);
+        result.TotalPages.Should().Be(1);
+        result.CurrentPage.Should().Be(1);
+        result.HasNextPage.Should().BeFalse();
+        result.HasPreviousPage.Should().BeFalse();
     }
 }
 
