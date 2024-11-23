@@ -14,7 +14,10 @@ public class BaseController : ControllerBase
         User.FindFirst(ClaimTypes.Email)?.Value ?? throw new NullReferenceException();
 
     protected IActionResult Ok<T>(T data) =>
-            base.Ok(new ApiResponseWithData<T> { Data = data, Success = true });
+            base.Ok(data);
+
+    protected IActionResult Ok(ApiResponse apiResponse) =>
+        base.Ok(new ApiResponse { Message = apiResponse.Message, Success = apiResponse.Success });
 
     protected IActionResult Created<T>(string routeName, object routeValues, T data) =>
         base.CreatedAtRoute(routeName, routeValues, new ApiResponseWithData<T> { Data = data, Success = true });
@@ -32,6 +35,9 @@ public class BaseController : ControllerBase
                 CurrentPage = pagedList.CurrentPage,
                 TotalPages = pagedList.TotalPages,
                 TotalCount = pagedList.TotalCount,
+                PageSize = pagedList.PageSize,
+                HasPreviousPage = pagedList.HasPrevious,
+                HasNextPage = pagedList.HasNext,
                 Success = true
             });
 }
