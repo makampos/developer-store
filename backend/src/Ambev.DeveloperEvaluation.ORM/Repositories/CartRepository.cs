@@ -21,4 +21,9 @@ public class CartRepository : ICartRepository
         await _context.SaveChangesAsync(cancellationToken);
         return cart;
     }
+
+    public async Task<Cart?> GetCartAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        return await _context.Carts.FirstOrDefaultAsync(o => o.Id == id, cancellationToken);
+    }
 }

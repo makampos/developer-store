@@ -2,6 +2,8 @@ using System.Net.Http.Json;
 using Ambev.DeveloperEvaluation.Integration.Configurations;
 using Ambev.DeveloperEvaluation.Integration.TestData;
 using Ambev.DeveloperEvaluation.WebApi.Carts.CreateCart;
+using Ambev.DeveloperEvaluation.WebApi.Carts.GetCart;
+using Ambev.DeveloperEvaluation.WebApi.Common;
 using FluentAssertions;
 using Xunit;
 
@@ -21,7 +23,7 @@ public class CartsControllerTests : IClassFixture<CustomWebApplicationFactory>
 
     [Fact(DisplayName = "Given a valid request, When creating a cart, Then it should return Created StatusCode " +
                         "and a cart response")]
-    public async Task  CreateCart_WithValidRequest_ShouldReturnCreated()
+    public async Task CreateCart_WithValidRequest_ShouldReturnCreated()
     {
         // Given
         var request  = CreateCartRequestFaker.GenerateValidRequest();
@@ -31,10 +33,40 @@ public class CartsControllerTests : IClassFixture<CustomWebApplicationFactory>
 
         // Then
         response.EnsureSuccessStatusCode();
-        var createCartResponse = await response.Content.ReadFromJsonAsync<CreateCartResponse>();
+
+
+        var createCartResponse = await response.Content.ReadFromJsonAsync<ApiResponseWithData<CreateCartResponse>>();
+        var id = createCartResponse!.Data!.Id;
+        response.Headers.Location!.LocalPath.Should().ContainAny($"/api/Carts/{id}");
         createCartResponse.Should().NotBeNull();
-        createCartResponse.Id.Should().NotBeEmpty();
-        createCartResponse.UserId.Should().Be(request.UserId);
-        createCartResponse.Date.Should().Be(request.Date);
+        createCartResponse!.Data.Should().BeEquivalentTo(request);
+        createCartResponse!.Success.Should().BeTrue();
+        createCartResponse.Errors.Should().BeNullOrEmpty();
+    }
+
+    [Fact(DisplayName = "Given a valid request, When getting a cart, Then it should return Ok StatusCode " +
+                        "and a cart response")]
+    public async Task GetCart_WithValidRequest_ShouldReturnOk()
+    {
+        // Given
+        var createCartRequest = CreateCartRequestFaker.GenerateValidRequest();
+        var createCartResponse = await _client.PostAsJsonAsync("api/carts", createCartRequest);
+        createCartResponse.EnsureSuccessStatusCode();
+
+        var cartId = await createCartResponse.Content.ReadFromJsonAsync<ApiResponseWithData<CreateCartResponse>>();
+
+        // When
+        var id = cartId!.Data!.Id;
+        var response = await _client.GetAsync($"api/carts/{id}");
+
+        // Then
+        response.EnsureSuccessStatusCode();
+        var getCartResponse = await response.Content.ReadFromJsonAsync<ApiResponseWithData<GetCartResponse>>();
+
+        getCartResponse.Should().NotBeNull();
+        getCartResponse!.Data.Should().BeEquivalentTo(createCartRequest);
+        getCartResponse!.Success.Should().BeTrue();
+        getCartResponse!.Message.Should().Be("Cart retrieved successfully");
+        getCartResponse.Errors.Should().BeNullOrEmpty();
     }
 }

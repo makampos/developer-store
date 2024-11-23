@@ -1,5 +1,7 @@
 using Ambev.DeveloperEvaluation.Application.Carts.CreateCart;
+using Ambev.DeveloperEvaluation.Application.Carts.GetCart;
 using Ambev.DeveloperEvaluation.WebApi.Carts.CreateCart;
+using Ambev.DeveloperEvaluation.WebApi.Carts.GetCart;
 using Ambev.DeveloperEvaluation.WebApi.Common;
 using AutoMapper;
 using MediatR;
@@ -30,11 +32,33 @@ public class CartsController : BaseController
         _logger.LogInformation("Controller {CartsController} triggered to handle {CreateCartRequest}",
             nameof(CartsController), nameof(CreateCartRequest));
 
+        //TODO: Implement Validator for BadRequest response
+
         var command = _mapper.Map<CreateCartCommand>(request);
         var result = await _mediator.Send(command);
 
-        //TODO: Add location header properly pointing to the get resource endpoint
-        return CreatedAtAction(nameof(CreateCart),
+        return Created(nameof(GetCartAsync),
             new { id = result.Id }, _mapper.Map<CreateCartResponse>(result));
+    }
+
+    [HttpGet("{id:guid}", Name = nameof(GetCartAsync))]
+    [ProducesResponseType(typeof(ApiResponseWithData<GetCartResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetCartAsync([FromRoute] Guid id)
+    {
+        _logger.LogInformation("Controller {CartsController} triggered to handle {GetCartRequest}",
+            nameof(CartsController), nameof(GetCartRequest));
+
+        var request = GetCartRequest.Create(id);
+
+        var command = _mapper.Map<GetCartCommand>(request);
+        var result = await _mediator.Send(command);
+
+        return Ok(new ApiResponseWithData<GetCartResponse>()
+        {
+            Data = _mapper.Map<GetCartResponse>(result),
+            Success = true,
+            Message = "Cart retrieved successfully"
+        });
     }
 }
