@@ -26,4 +26,17 @@ public class CartRepository : ICartRepository
     {
         return await _context.Carts.FirstOrDefaultAsync(o => o.Id == id, cancellationToken);
     }
+
+    public async Task<bool> DeleteCartAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var cart = await _context.Carts.FirstOrDefaultAsync(o => o.Id == id, cancellationToken);
+        if (cart is null)
+        {
+            return false;
+        }
+
+        _context.Carts.Remove(cart);
+        var result = await _context.SaveChangesAsync(cancellationToken);
+        return result > 0;
+    }
 }

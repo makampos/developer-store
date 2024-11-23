@@ -1,3 +1,4 @@
+using System.Net;
 using System.Net.Http.Json;
 using Ambev.DeveloperEvaluation.Integration.Configurations;
 using Ambev.DeveloperEvaluation.Integration.TestData;
@@ -68,5 +69,45 @@ public class CartsControllerTests : IClassFixture<CustomWebApplicationFactory>
         getCartResponse!.Success.Should().BeTrue();
         getCartResponse!.Message.Should().Be("Cart retrieved successfully");
         getCartResponse.Errors.Should().BeNullOrEmpty();
+    }
+
+    [Fact(DisplayName = "Given an invalid request, When creating a cart, Then it should return BadRequest StatusCode " +
+                        "and a error response")]
+    public async Task CreateCart_WithInvalidRequest_ShouldReturnBadRequest()
+    {
+        // Given
+        var request = DeleteCartRequestFaker.GenerateInvalidRequest();
+
+        // When
+        var response = await _client.DeleteAsync($"api/carts/{request.Id}");
+        var errorResponse = await response.Content.ReadFromJsonAsync<ApiResponse>();
+
+        // Then
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        errorResponse.Should().NotBeNull();
+        errorResponse!.Success.Should().BeFalse();
+        errorResponse!.Message.Should().Be("Id is required");
+    }
+
+    [Fact(DisplayName = "Given a valid request, When deleting a cart, Then it should return StatusCode Ok")]
+    public async Task DeleteCart_WithValidRequest_ShouldReturnOk()
+    {
+        // Given
+        var createCartRequest = CreateCartRequestFaker.GenerateValidRequest();
+        var createCartResponse = await _client.PostAsJsonAsync("api/carts", createCartRequest);
+        createCartResponse.EnsureSuccessStatusCode();
+
+        var createCarResponse = await createCartResponse.Content.ReadFromJsonAsync<ApiResponseWithData<CreateCartResponse>>();
+
+        // When
+        var id = createCarResponse!.Data!.Id;
+        var response = await _client.DeleteAsync($"api/carts/{id}");
+        response.EnsureSuccessStatusCode();
+        var deleteResponse = await response.Content.ReadFromJsonAsync<ApiResponse>();
+
+        // Then
+        deleteResponse.Should().NotBeNull();
+        deleteResponse!.Success.Should().BeTrue();
+        deleteResponse!.Message.Should().Be("Cart deleted successfully");
     }
 }

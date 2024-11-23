@@ -52,7 +52,7 @@ public class GetCartHandlerTests
     }
 
     [Fact(DisplayName = "Given an valid command, when Handle is called, then it should throw a KeyNotFoundException")]
-    public async Task Handle_InvalidCommand_ThrowsKeyNotFoundException()
+    public async Task Handle_ValidCommand_ThrowsKeyNotFoundException()
     {
         // Arrange
         var command = GetCartHandlerTestData.GenerateValidCommand();
