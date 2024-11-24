@@ -2,10 +2,12 @@ using Ambev.DeveloperEvaluation.Application.Carts.CreateCart;
 using Ambev.DeveloperEvaluation.Application.Carts.DeleteCart;
 using Ambev.DeveloperEvaluation.Application.Carts.GetAllCart;
 using Ambev.DeveloperEvaluation.Application.Carts.GetCart;
+using Ambev.DeveloperEvaluation.Application.Carts.UpdateCart;
 using Ambev.DeveloperEvaluation.WebApi.Carts.CreateCart;
 using Ambev.DeveloperEvaluation.WebApi.Carts.DeleteCart;
 using Ambev.DeveloperEvaluation.WebApi.Carts.GetAllCart;
 using Ambev.DeveloperEvaluation.WebApi.Carts.GetCart;
+using Ambev.DeveloperEvaluation.WebApi.Carts.UpdateCart;
 using Ambev.DeveloperEvaluation.WebApi.Common;
 using AutoMapper;
 using MediatR;
@@ -119,5 +121,39 @@ public class CartsController : BaseController
             result.Carts.TotalCount,
             result.Carts.CurrentPage,
             result.Carts.PageSize));
+    }
+
+    [HttpPut("{id:guid}")]
+    [ProducesResponseType(typeof(ApiResponseWithData<UpdateCartResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> UpdateCartAsync([FromRoute] Guid id, [FromBody] UpdateCartRequest request)
+    {
+        _logger.LogInformation("Controller {CartsController} triggered to handle {UpdateCartRequest}",
+            nameof(CartsController), nameof(UpdateCartRequest));
+
+        request = request.IncludeId(id);
+
+        var validator = new UpdateCartRequestValidator();
+
+        var validationResult = await validator.ValidateAsync(request);
+
+        if (!validationResult.IsValid)
+        {
+            _logger.LogWarning("Validation failed for {UpdateCartRequest}", nameof(UpdateCartRequest));
+            return BadRequest(validationResult.Errors.FirstOrDefault()!.ErrorMessage);
+        }
+
+        var command = _mapper.Map<UpdateCartCommand>(request);
+
+        var result = await _mediator.Send(command);
+        var map = _mapper.Map<UpdateCartResponse>(result);
+
+        return Ok(new ApiResponseWithData<UpdateCartResponse>()
+        {
+            Data = map,
+            Success = true,
+            Message = "Cart updated successfully"
+        });
     }
 }

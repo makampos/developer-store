@@ -11,7 +11,7 @@ public static class GetAllCartHandlerTestData
         .RuleFor(c => c.UserId, f => f.Random.Guid())
         .RuleFor(c => c.Date, f => f.Date.Past())
         .RuleFor(c => c.Products, f => f.Make(10,
-            () => new CartItem(f.Random.Guid(), f.Random.Int(1, 10))));
+            () => CartItem.Create(f.Random.Guid(), f.Random.Int(1, 10))));
 
     public static List<Cart> GetAllCarts(int count)
     {

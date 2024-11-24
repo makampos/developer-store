@@ -23,7 +23,7 @@ public class GetCartHandler : IRequestHandler<GetCartCommand, GetCartResult>
         _logger.LogInformation("Handler {GetCartHandler} triggered to handle {GetCartCommand}",
             nameof(GetCartHandler), nameof(GetCartCommand));
 
-        var cart = await _repository.GetCartAsync(command.Id, cancellationToken);
+        var cart = await _repository.GetByIdAsync(command.Id, cancellationToken);
 
         if (cart is null)
         {

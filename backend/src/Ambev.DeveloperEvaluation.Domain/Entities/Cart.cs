@@ -7,7 +7,7 @@ public class Cart : BaseEntity
 {
     public Guid UserId { get; private set; }
     public DateTime Date { get; private set; }
-    public List<CartItem> Products { get; private set; } = new List<CartItem>();
+    public List<CartItem> Products { get; private set; } = [];
 
     public Cart()
     {
@@ -24,22 +24,8 @@ public class Cart : BaseEntity
         };
     }
 
-    public void AddProduct(Guid productId, int quantity)
+    public void Update(List<CartItem> products)
     {
-        Products.Add(new CartItem(productId, quantity));
-    }
-
-    public void RemoveProduct(Guid productId)
-    {
-        var product = Products.FirstOrDefault(x => x.ProductId == productId);
-        if (product != null)
-        {
-            Products.Remove(product);
-        }
-    }
-
-    public void RemoveAllProducts(Guid productId)
-    {
-        Products.RemoveAll(x => x.ProductId == productId);
+        Products = products;
     }
 }

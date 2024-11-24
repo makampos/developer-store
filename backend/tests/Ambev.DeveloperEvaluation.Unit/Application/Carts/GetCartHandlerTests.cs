@@ -33,7 +33,7 @@ public class GetCartHandlerTests
         var cart = GetCartHandlerTestData.GenerateValidCart();
         var cartResult = GetCartResult.Create(cart.Id, cart.UserId, cart.Date, cart.Products);
 
-        _cartRepository.GetCartAsync(command.Id, Arg.Any<CancellationToken>()).Returns(cart);
+        _cartRepository.GetByIdAsync(command.Id, Arg.Any<CancellationToken>()).Returns(cart);
         _mapper.Map<GetCartResult>(cart).Returns(cartResult);
 
         // Act
@@ -46,7 +46,7 @@ public class GetCartHandlerTests
                  c.Date == cart.Date &&
                  c.Products == cart.Products));
 
-        await _cartRepository.Received(1).GetCartAsync(command.Id, Arg.Any<CancellationToken>());
+        await _cartRepository.Received(1).GetByIdAsync(command.Id, Arg.Any<CancellationToken>());
 
         getCartResult.Should().BeEquivalentTo(cartResult);
     }
@@ -57,7 +57,7 @@ public class GetCartHandlerTests
         // Arrange
         var command = GetCartHandlerTestData.GenerateValidCommand();
 
-        _cartRepository.GetCartAsync(command.Id, Arg.Any<CancellationToken>()).Returns(null as Cart);
+        _cartRepository.GetByIdAsync(command.Id, Arg.Any<CancellationToken>()).Returns(null as Cart);
 
         // Act
         Func<Task> act = async () => await _handler.Handle(command, CancellationToken.None);

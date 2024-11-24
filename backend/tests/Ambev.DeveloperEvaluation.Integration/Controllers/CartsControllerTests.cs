@@ -5,6 +5,7 @@ using Ambev.DeveloperEvaluation.Integration.TestData;
 using Ambev.DeveloperEvaluation.WebApi.Carts.CreateCart;
 using Ambev.DeveloperEvaluation.WebApi.Carts.GetAllCart;
 using Ambev.DeveloperEvaluation.WebApi.Carts.GetCart;
+using Ambev.DeveloperEvaluation.WebApi.Carts.UpdateCart;
 using Ambev.DeveloperEvaluation.WebApi.Common;
 using FluentAssertions;
 using Xunit;
@@ -193,5 +194,58 @@ public class CartsControllerTests : IClassFixture<CustomWebApplicationFactory>
         result.HasPreviousPage.Should().BeFalse();
         result.HasNextPage.Should().BeFalse();
         result.CurrentPage.Should().Be(1);
+    }
+
+    [Fact(DisplayName = "Given a valid request, When updating a cart, Then it should return Ok StatusCode " +
+                        "and a cart response")]
+    public async Task UpdateCart_WithValidRequest_ShouldReturnOk()
+    {
+        // Given
+        var createCartRequest = CreateCartRequestFaker.GenerateValidRequest();
+        var createCartResponse = await _client.PostAsJsonAsync("api/carts", createCartRequest);
+        createCartResponse.EnsureSuccessStatusCode();
+
+        var cartId = await createCartResponse.Content.ReadFromJsonAsync<ApiResponseWithData<CreateCartResponse>>();
+
+        var updateCartRequest = UpdateCartRequestFaker.GenerateValidRequest();
+
+        // When
+        var id = cartId!.Data!.Id;
+        var response = await _client.PutAsJsonAsync($"api/carts/{id}", updateCartRequest);
+
+        // Then
+        response.EnsureSuccessStatusCode();
+        var updateCartResponse = await response.Content.ReadFromJsonAsync<ApiResponseWithData<UpdateCartResponse>>();
+
+        updateCartResponse.Should().NotBeNull();
+        updateCartResponse!.Data.Should().NotBeNull();
+        updateCartResponse!.Success.Should().BeTrue();
+        updateCartResponse!.Message.Should().Be("Cart updated successfully");
+        updateCartResponse.Errors.Should().BeNullOrEmpty();
+    }
+
+    [Fact(DisplayName = "Given an invalid request, When updating a cart, Then it should return BadRequest StatusCode " +
+                        "and a error response")]
+    public async Task UpdateCart_WithInvalidRequest_ShouldReturnBadRequest()
+    {
+        // Given
+        var createCartRequest = CreateCartRequestFaker.GenerateValidRequest();
+        var createCartResponse = await _client.PostAsJsonAsync("api/carts", createCartRequest);
+        createCartResponse.EnsureSuccessStatusCode();
+
+        var cartId = await createCartResponse.Content.ReadFromJsonAsync<ApiResponseWithData<CreateCartResponse>>();
+
+        var updateCartRequest = UpdateCartRequestFaker.GenerateInvalidRequest();
+
+        // When
+
+        var id = cartId!.Data!.Id;
+        var response = await _client.PutAsJsonAsync($"api/carts/{id}", updateCartRequest);
+
+        // Then
+        var errorResponse = await response.Content.ReadFromJsonAsync<ApiResponse>();
+        errorResponse.Should().NotBeNull();
+        errorResponse!.Success.Should().BeFalse();
+        errorResponse!.Message.Should().Be("CartItems is required");
     }
 }

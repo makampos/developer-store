@@ -22,7 +22,7 @@ public class CartRepository : ICartRepository
         return cart;
     }
 
-    public async Task<Cart?> GetCartAsync(Guid id, CancellationToken cancellationToken = default)
+    public async Task<Cart?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         return await _context.Carts.FirstOrDefaultAsync(o => o.Id == id, cancellationToken);
     }
@@ -118,6 +118,13 @@ public class CartRepository : ICartRepository
             .ToListAsync(cancellationToken);
 
         return PagedResult<Cart>.Create(items, totalCount, pageSize, pageNumber);
+    }
+
+    public async Task<Cart> UpdateAsync(Cart cart, CancellationToken cancellationToken = default)
+    {
+        _context.Carts.Update(cart);
+        await _context.SaveChangesAsync(cancellationToken);
+        return cart;
     }
 
     private IQueryable<Cart> SetAsNoTracking
