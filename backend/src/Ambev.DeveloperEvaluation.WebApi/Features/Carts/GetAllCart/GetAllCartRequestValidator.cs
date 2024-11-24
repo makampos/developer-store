@@ -1,6 +1,6 @@
 using FluentValidation;
 
-namespace Ambev.DeveloperEvaluation.WebApi.Carts.GetAllCart;
+namespace Ambev.DeveloperEvaluation.WebApi.Features.Carts.GetAllCart;
 
 public class GetAllCartRequestValidator : AbstractValidator<GetAllCartRequest>
 {

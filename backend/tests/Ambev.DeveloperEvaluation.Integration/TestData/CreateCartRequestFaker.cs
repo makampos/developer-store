@@ -1,5 +1,5 @@
 using Ambev.DeveloperEvaluation.Domain.ValueObjects;
-using Ambev.DeveloperEvaluation.WebApi.Carts.CreateCart;
+using Ambev.DeveloperEvaluation.WebApi.Features.Carts.CreateCart;
 using Bogus;
 
 namespace Ambev.DeveloperEvaluation.Integration.TestData;

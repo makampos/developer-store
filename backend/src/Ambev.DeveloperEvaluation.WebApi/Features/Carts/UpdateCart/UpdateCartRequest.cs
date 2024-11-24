@@ -1,6 +1,6 @@
 using Ambev.DeveloperEvaluation.Domain.ValueObjects;
 
-namespace Ambev.DeveloperEvaluation.WebApi.Carts.UpdateCart;
+namespace Ambev.DeveloperEvaluation.WebApi.Features.Carts.UpdateCart;
 
 public record UpdateCartRequest(Guid Id, List<CartItem> CartItems)
 {

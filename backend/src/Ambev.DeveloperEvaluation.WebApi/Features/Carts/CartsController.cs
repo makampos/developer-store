@@ -3,17 +3,17 @@ using Ambev.DeveloperEvaluation.Application.Carts.DeleteCart;
 using Ambev.DeveloperEvaluation.Application.Carts.GetAllCart;
 using Ambev.DeveloperEvaluation.Application.Carts.GetCart;
 using Ambev.DeveloperEvaluation.Application.Carts.UpdateCart;
-using Ambev.DeveloperEvaluation.WebApi.Carts.CreateCart;
-using Ambev.DeveloperEvaluation.WebApi.Carts.DeleteCart;
-using Ambev.DeveloperEvaluation.WebApi.Carts.GetAllCart;
-using Ambev.DeveloperEvaluation.WebApi.Carts.GetCart;
-using Ambev.DeveloperEvaluation.WebApi.Carts.UpdateCart;
 using Ambev.DeveloperEvaluation.WebApi.Common;
+using Ambev.DeveloperEvaluation.WebApi.Features.Carts.CreateCart;
+using Ambev.DeveloperEvaluation.WebApi.Features.Carts.DeleteCart;
+using Ambev.DeveloperEvaluation.WebApi.Features.Carts.GetAllCart;
+using Ambev.DeveloperEvaluation.WebApi.Features.Carts.GetCart;
+using Ambev.DeveloperEvaluation.WebApi.Features.Carts.UpdateCart;
 using AutoMapper;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Ambev.DeveloperEvaluation.WebApi.Carts;
+namespace Ambev.DeveloperEvaluation.WebApi.Features.Carts;
 
 [ApiController]
 [Route("api/[controller]")]

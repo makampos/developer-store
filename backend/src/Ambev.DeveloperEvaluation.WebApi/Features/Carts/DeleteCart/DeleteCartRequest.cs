@@ -1,4 +1,4 @@
-namespace Ambev.DeveloperEvaluation.WebApi.Carts.DeleteCart;
+namespace Ambev.DeveloperEvaluation.WebApi.Features.Carts.DeleteCart;
 
 public record DeleteCartRequest(Guid Id)
 {

@@ -2,11 +2,11 @@ using System.Net;
 using System.Net.Http.Json;
 using Ambev.DeveloperEvaluation.Integration.Configurations;
 using Ambev.DeveloperEvaluation.Integration.TestData;
-using Ambev.DeveloperEvaluation.WebApi.Carts.CreateCart;
-using Ambev.DeveloperEvaluation.WebApi.Carts.GetAllCart;
-using Ambev.DeveloperEvaluation.WebApi.Carts.GetCart;
-using Ambev.DeveloperEvaluation.WebApi.Carts.UpdateCart;
 using Ambev.DeveloperEvaluation.WebApi.Common;
+using Ambev.DeveloperEvaluation.WebApi.Features.Carts.CreateCart;
+using Ambev.DeveloperEvaluation.WebApi.Features.Carts.GetAllCart;
+using Ambev.DeveloperEvaluation.WebApi.Features.Carts.GetCart;
+using Ambev.DeveloperEvaluation.WebApi.Features.Carts.UpdateCart;
 using FluentAssertions;
 using Xunit;
 

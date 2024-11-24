@@ -1,4 +1,4 @@
-using Ambev.DeveloperEvaluation.WebApi.Carts.DeleteCart;
+using Ambev.DeveloperEvaluation.WebApi.Features.Carts.DeleteCart;
 using Bogus;
 
 namespace Ambev.DeveloperEvaluation.Integration.TestData;

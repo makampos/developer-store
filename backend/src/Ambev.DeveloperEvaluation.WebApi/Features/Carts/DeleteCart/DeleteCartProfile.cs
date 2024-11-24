@@ -1,7 +1,7 @@
 using Ambev.DeveloperEvaluation.Application.Carts.DeleteCart;
 using AutoMapper;
 
-namespace Ambev.DeveloperEvaluation.WebApi.Carts.DeleteCart;
+namespace Ambev.DeveloperEvaluation.WebApi.Features.Carts.DeleteCart;
 
 public class DeleteCartProfile : Profile
 {

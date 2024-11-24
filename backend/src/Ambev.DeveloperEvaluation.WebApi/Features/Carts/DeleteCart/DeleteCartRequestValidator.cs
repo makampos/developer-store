@@ -1,6 +1,6 @@
 using FluentValidation;
 
-namespace Ambev.DeveloperEvaluation.WebApi.Carts.DeleteCart;
+namespace Ambev.DeveloperEvaluation.WebApi.Features.Carts.DeleteCart;
 
 public class DeleteCartRequestValidator : AbstractValidator<DeleteCartRequest>
 {

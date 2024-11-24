@@ -1,7 +1,7 @@
 using Ambev.DeveloperEvaluation.Application.Carts.CreateCart;
 using AutoMapper;
 
-namespace Ambev.DeveloperEvaluation.WebApi.Carts.CreateCart;
+namespace Ambev.DeveloperEvaluation.WebApi.Features.Carts.CreateCart;
 
 public class CreateCartProfile : Profile
 {

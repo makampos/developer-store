@@ -1,4 +1,4 @@
-namespace Ambev.DeveloperEvaluation.WebApi.Carts.GetCart;
+namespace Ambev.DeveloperEvaluation.WebApi.Features.Carts.GetCart;
 
 public record GetCartRequest(Guid Id)
 {
