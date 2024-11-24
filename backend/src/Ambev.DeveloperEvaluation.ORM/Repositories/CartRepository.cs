@@ -39,4 +39,94 @@ public class CartRepository : ICartRepository
         var result = await _context.SaveChangesAsync(cancellationToken);
         return result > 0;
     }
+
+     public async Task<PagedResult<Cart>> GetAllCartsAsync(
+        int pageNumber = 1,
+        int pageSize = 10,
+        string? order = null,
+        CancellationToken cancellationToken = default)
+    {
+        var query = SetAsNoTracking;
+
+        if (!string.IsNullOrEmpty(order))
+        {
+            var orderedQueryable = query as IOrderedQueryable<Cart>;
+
+            var orderByFields = order.Split([','], StringSplitOptions.RemoveEmptyEntries);
+
+            var isFirstOrdering = true;
+
+            foreach (var field in orderByFields)
+            {
+                var trimmedField = field.Trim();
+
+                if (trimmedField.EndsWith(" desc", StringComparison.OrdinalIgnoreCase))
+                {
+                    trimmedField = trimmedField.Substring(0, trimmedField.Length - 5).Trim();
+                    trimmedField = char.ToUpper(trimmedField[0]) + trimmedField.Substring(1);
+
+                    if (isFirstOrdering)
+                    {
+                        orderedQueryable = orderedQueryable.OrderByDescending(p => EF.Property<object>(p, trimmedField));
+                        isFirstOrdering = false;
+                    }
+                    else
+                    {
+                        orderedQueryable = orderedQueryable.ThenByDescending(p => EF.Property<object>(p, trimmedField));
+                    }
+                }
+
+                else if (trimmedField.EndsWith(" asc", StringComparison.OrdinalIgnoreCase))
+                {
+                    trimmedField = trimmedField.Substring(0, trimmedField.Length - 4).Trim();
+                    trimmedField = char.ToUpper(trimmedField[0]) + trimmedField.Substring(1);
+
+                    if (isFirstOrdering)
+                    {
+                        orderedQueryable = orderedQueryable.OrderBy(p => EF.Property<object>(p, trimmedField));
+                        isFirstOrdering = false;
+                    }
+                    else
+                    {
+                        orderedQueryable = orderedQueryable.ThenBy(p => EF.Property<object>(p, trimmedField));
+
+                    }
+                }
+                else
+                {
+                    trimmedField = char.ToUpper(trimmedField[0]) + trimmedField.Substring(1);
+
+                    if (isFirstOrdering)
+                    {
+                        orderedQueryable = orderedQueryable.OrderBy(p => EF.Property<object>(p, trimmedField));
+                        isFirstOrdering = false;
+                    }
+                    else
+                    {
+                        orderedQueryable = orderedQueryable.ThenBy(p => EF.Property<object>(p, trimmedField));
+                    }
+                }
+            }
+
+            query = orderedQueryable;
+        }
+
+        var totalCount = await query!.CountAsync(cancellationToken);
+        var items = await query!
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(cancellationToken);
+
+        return PagedResult<Cart>.Create(items, totalCount, pageSize, pageNumber);
+    }
+
+    private IQueryable<Cart> SetAsNoTracking
+    {
+        get
+        {
+            var query = Set.AsNoTracking();
+
+            return query;
+        }
+    }
 }

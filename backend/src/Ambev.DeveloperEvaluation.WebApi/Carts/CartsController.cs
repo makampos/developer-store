@@ -1,8 +1,10 @@
 using Ambev.DeveloperEvaluation.Application.Carts.CreateCart;
 using Ambev.DeveloperEvaluation.Application.Carts.DeleteCart;
+using Ambev.DeveloperEvaluation.Application.Carts.GetAllCart;
 using Ambev.DeveloperEvaluation.Application.Carts.GetCart;
 using Ambev.DeveloperEvaluation.WebApi.Carts.CreateCart;
 using Ambev.DeveloperEvaluation.WebApi.Carts.DeleteCart;
+using Ambev.DeveloperEvaluation.WebApi.Carts.GetAllCart;
 using Ambev.DeveloperEvaluation.WebApi.Carts.GetCart;
 using Ambev.DeveloperEvaluation.WebApi.Common;
 using AutoMapper;
@@ -90,5 +92,32 @@ public class CartsController : BaseController
             Success = result.Success,
             Message = "Cart deleted successfully"
         });
+    }
+
+    [HttpGet]
+    [ProducesResponseType(typeof(ApiResponseWithData<GetCartResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetAllCartsAsync([FromQuery] GetAllCartRequest request)
+    {
+        _logger.LogInformation("Controller {CartsController} triggered to handle {GetCartRequest}",
+            nameof(CartsController), nameof(GetCartRequest));
+
+        var validator = new GetAllCartRequestValidator();
+        var validationResult = await validator.ValidateAsync(request);
+
+        if (!validationResult.IsValid)
+        {
+            _logger.LogWarning("Validation failed for {GetAllCartRequest}", nameof(GetAllCartRequest));
+            return BadRequest(validationResult.Errors.FirstOrDefault()!.ErrorMessage);
+        }
+
+        var command = _mapper.Map<GetAllCardCommand>(request);
+        var result = await _mediator.Send(command);
+
+        return OkPaginated(new PaginatedList<GetCartResponse>(
+            _mapper.Map<List<GetCartResponse>>(result.Carts.Items),
+            result.Carts.TotalCount,
+            result.Carts.CurrentPage,
+            result.Carts.PageSize));
     }
 }

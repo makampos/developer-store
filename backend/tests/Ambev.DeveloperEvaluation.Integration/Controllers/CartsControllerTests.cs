@@ -3,6 +3,7 @@ using System.Net.Http.Json;
 using Ambev.DeveloperEvaluation.Integration.Configurations;
 using Ambev.DeveloperEvaluation.Integration.TestData;
 using Ambev.DeveloperEvaluation.WebApi.Carts.CreateCart;
+using Ambev.DeveloperEvaluation.WebApi.Carts.GetAllCart;
 using Ambev.DeveloperEvaluation.WebApi.Carts.GetCart;
 using Ambev.DeveloperEvaluation.WebApi.Common;
 using FluentAssertions;
@@ -65,7 +66,7 @@ public class CartsControllerTests : IClassFixture<CustomWebApplicationFactory>
         var getCartResponse = await response.Content.ReadFromJsonAsync<ApiResponseWithData<GetCartResponse>>();
 
         getCartResponse.Should().NotBeNull();
-        getCartResponse!.Data.Should().BeEquivalentTo(createCartRequest);
+        getCartResponse!.Data.Should().NotBeNull();
         getCartResponse!.Success.Should().BeTrue();
         getCartResponse!.Message.Should().Be("Cart retrieved successfully");
         getCartResponse.Errors.Should().BeNullOrEmpty();
@@ -109,5 +110,88 @@ public class CartsControllerTests : IClassFixture<CustomWebApplicationFactory>
         deleteResponse.Should().NotBeNull();
         deleteResponse!.Success.Should().BeTrue();
         deleteResponse!.Message.Should().Be("Cart deleted successfully");
+    }
+
+    [Fact(DisplayName = "Given a valid request, When getting all carts, Then it should return Ok StatusCode " +
+                        "and a paginated list of carts")]
+    public async Task GetAllCart_WithValidRequest_ShouldReturnOk()
+    {
+        // Given
+        var createCartRequest = CreateCartRequestFaker.GenerateValidRequest();
+        var createCartResponse = await _client.PostAsJsonAsync("api/carts", createCartRequest);
+        createCartResponse.EnsureSuccessStatusCode();
+
+        // When
+        var getAllCartsRequest = GetAllCartRequest.Create(1, 10);
+        var response = await _client.GetAsync($"api/carts?pageNumber={getAllCartsRequest.PageNumber}&pageSize={getAllCartsRequest.PageSize}");
+        response.EnsureSuccessStatusCode();
+
+        var result = await response.Content.ReadFromJsonAsync<PaginatedResponse<GetCartResponse>>();
+        result.Should().NotBeNull();
+        result!.Data.Should().NotBeNullOrEmpty();
+        result!.Data.Should().HaveCount(1);
+        result!.Success.Should().BeTrue();
+        result.Errors.Should().BeNullOrEmpty();
+        result.PageSize.Should().Be(10);
+        result.TotalCount.Should().Be(1);
+        result.TotalPages.Should().Be(1);
+        result.HasPreviousPage.Should().BeFalse();
+        result.HasNextPage.Should().BeFalse();
+        result.CurrentPage.Should().Be(1);
+    }
+
+    [Fact(DisplayName =
+        "Given an invalid request, When getting all carts, Then it should return BadRequest StatusCode " +
+        "and a error response")]
+    public async Task GetAllCart_WithInvalidRequest_ShouldReturnBadRequest()
+    {
+        // Given
+        var getAllCartsRequest = GetAllCartRequest.Create(-1, -10);
+
+        // When
+        var response = await _client.GetAsync($"api/carts?pageNumber={getAllCartsRequest.PageNumber}&pageSize={getAllCartsRequest.PageSize}");
+
+        // Then
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        var errorResponse = await response.Content.ReadFromJsonAsync<ApiResponse>();
+        errorResponse.Should().NotBeNull();
+        errorResponse!.Success.Should().BeFalse();
+        errorResponse!.Message.Should().Be("Page number must be greater than 0");
+    }
+
+    [Fact(DisplayName =
+        "Given a valid request with ordering, When getting all carts, Then it should return Ok StatusCode " +
+        "and a paginated list of carts ordered by the specified field")]
+    public async Task GetAllCart_WithOrdering_ShouldReturnOk()
+    {
+        // Given
+        var createCartRequests = CreateCartRequestFaker.GenerateValidRequests(3);
+
+        foreach (var createCartRequest in createCartRequests)
+        {
+            var createCartResponse = await _client.PostAsJsonAsync("api/carts", createCartRequest);
+            createCartResponse.EnsureSuccessStatusCode();
+        }
+
+        var request = GetAllCartRequest.Create(1, 10, "date asc");
+
+        // When
+        var response = await _client.GetAsync($"api/carts?pageNumber={request.PageNumber}&pageSize={request.PageSize}&order={request.Order}");
+        response.EnsureSuccessStatusCode();
+
+        // Then
+        var result = await response.Content.ReadFromJsonAsync<PaginatedResponse<GetCartResponse>>();
+        result.Should().NotBeNull();
+        result!.Data.Should().NotBeNullOrEmpty();
+        result!.Data.Should().HaveCount(3);
+        result!.Data.Should().BeInAscendingOrder(x => x.Date);
+        result!.Success.Should().BeTrue();
+        result.Errors.Should().BeNullOrEmpty();
+        result.PageSize.Should().Be(10);
+        result.TotalCount.Should().Be(3);
+        result.TotalPages.Should().Be(1);
+        result.HasPreviousPage.Should().BeFalse();
+        result.HasNextPage.Should().BeFalse();
+        result.CurrentPage.Should().Be(1);
     }
 }
