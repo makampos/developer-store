@@ -3,8 +3,9 @@ namespace Ambev.DeveloperEvaluation.Domain.ValueObjects;
 public record CartItem(Guid ProductId, int Quantity)
 {
     public static CartItem Create(Guid productId, int quantity) => new CartItem(productId, quantity);
-    public static bool IsValid(CartItem cartItem)
+
+    // parameterless constructor for Faker
+    public CartItem() : this(Guid.Empty, 0)
     {
-        return cartItem.ProductId != Guid.Empty && cartItem.Quantity > 0;
     }
 }
