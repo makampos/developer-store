@@ -17,6 +17,19 @@ public record CartItemDetails : CartItem
         ProductId = cartItem.ProductId;
     }
 
+    public CartItemDetails ToCartItemDetails(Product product)
+    {
+        var totalAmountWithDiscount = CalculateTotal(product.Price);
+
+        TotalAmountWithDiscount = totalAmountWithDiscount;
+        UnitPrice = product.Price;
+        Product = product;
+        TotalDiscounts = totalAmountWithDiscount - Quantity * product.Price;
+        TotalAmount = Quantity * product.Price;
+
+        return this;
+    }
+
     private decimal CalculateTotal(decimal unitPrice)
     {
         decimal discount = 0;
@@ -43,18 +56,5 @@ public record CartItemDetails : CartItem
         }
 
         return Quantity * unitPrice * (1 - discount);
-    }
-
-    public CartItemDetails ToCartItemDetails(Product product)
-    {
-        var totalAmountWithDiscount = CalculateTotal(product.Price);
-
-        TotalAmountWithDiscount = totalAmountWithDiscount;
-        UnitPrice = product.Price;
-        Product = product;
-        TotalDiscounts = totalAmountWithDiscount - Quantity * product.Price;
-        TotalAmount = Quantity * product.Price;
-
-        return this;
     }
 }

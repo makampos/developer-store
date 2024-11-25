@@ -27,7 +27,8 @@ public class ProductRepository : IProductRepository
         return await _context.Products.FirstOrDefaultAsync(o => o.Id == id, cancellationToken);
     }
 
-    public async Task<IReadOnlyList<Product>> GetByIdsAsync(IEnumerable<Guid> ids, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<Product>> GetByIdsAsync(List<Guid> ids, CancellationToken cancellationToken =
+            default)
     {
         return await SetAsNoTracking
             .Where(p => ids.Contains(p.Id))

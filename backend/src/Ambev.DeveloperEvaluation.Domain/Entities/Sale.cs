@@ -22,7 +22,8 @@ public class Sale
         foreach (var item in cartItems)
         {
             var product = GetProductById(item.ProductId); // Fetch product details (example, price)
-            var saleItem = new SaleItem(product.Id, item.Quantity, product.Price, item.TotalAmountWithDiscount, item.TotalAmount);
+            var saleItem = SaleItem.Create(product.Id, item.Quantity, product.Price, item.TotalAmountWithDiscount,
+                item.TotalAmount);
             SaleItems.Add(saleItem);
             TotalSaleAmount += saleItem.TotalAmountWithDiscount;
         }
@@ -51,6 +52,44 @@ public class Sale
         }
 
         IsCanceled = true;
+    }
+
+    // update sale
+    public void UpdateSale(IReadOnlyCollection<CartItemDetails> cartItemDetails, IReadOnlyCollection<Product> products,
+        string branch, Guid userId)
+    {
+        if (IsCanceled)
+        {
+            throw new DomainException("Sale already canceled");
+        }
+
+        SaleItems.Clear();
+        TotalSaleAmount = 0;
+        TotalSaleDiscount = 0;
+
+        foreach (var cartItem in cartItemDetails)
+        {
+            var product = GetProductById(cartItem.ProductId); // Fetch product details (example, price)
+            var saleItem = SaleItem.Create(product.Id, cartItem.Quantity, product.Price, cartItem.TotalAmountWithDiscount,
+                cartItem.TotalAmount);
+            SaleItems.Add(saleItem);
+            TotalSaleAmount += saleItem.TotalAmountWithDiscount;
+        }
+
+        SaleDate = DateTime.Now;
+        Branch = branch;
+        UserId = userId;
+
+        // calculate total discount by looking at the total discount of each item
+        TotalSaleDiscount = cartItemDetails.Sum(x => (x.UnitPrice * x.Quantity) - x.TotalAmountWithDiscount!);
+
+        return;
+
+        Product GetProductById(Guid productId)
+        {
+            // at this point, we are sure that product exists
+            return products.FirstOrDefault(p => p.Id == productId)!;
+        }
     }
 }
 

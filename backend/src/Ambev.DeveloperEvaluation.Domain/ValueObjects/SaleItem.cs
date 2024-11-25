@@ -1,19 +1,33 @@
 namespace Ambev.DeveloperEvaluation.Domain.ValueObjects;
 
-public class SaleItem
+public record SaleItem(
+    Guid ProductId,
+    int Quantity,
+    decimal UnitPrice,
+    decimal TotalAmountWithDiscount,
+    decimal TotalSaleItemAmount)
 {
-    public Guid ProductId { get; private set; }
-    public int Quantity { get; private set; }
-    public decimal UnitPrice { get; private set; }
-    public decimal TotalAmountWithDiscount { get; set; }
-    public decimal TotalSaleItemAmount { get; set; }
-
-    public SaleItem(Guid productId, int quantity, decimal unitPrice, decimal totalAmountWithDiscount, decimal totalSaleItemAmount)
+    public SaleItem() : this(
+        Guid.Empty,
+        0,
+        0,
+        0,
+        0)
     {
-        ProductId = productId;
-        Quantity = quantity;
-        UnitPrice = unitPrice;
-        TotalAmountWithDiscount = totalAmountWithDiscount;
-        TotalSaleItemAmount = totalSaleItemAmount;
+    }
+
+    public static SaleItem Create(
+        Guid productId,
+        int quantity,
+        decimal unitPrice,
+        decimal totalAmountWithDiscount,
+        decimal totalSaleItemAmount)
+    {
+        return new SaleItem(
+            productId,
+            quantity,
+            unitPrice,
+            totalAmountWithDiscount,
+            totalSaleItemAmount);
     }
 }
