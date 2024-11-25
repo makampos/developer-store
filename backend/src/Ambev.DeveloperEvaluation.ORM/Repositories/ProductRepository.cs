@@ -27,6 +27,14 @@ public class ProductRepository : IProductRepository
         return await _context.Products.FirstOrDefaultAsync(o => o.Id == id, cancellationToken);
     }
 
+    public async Task<IReadOnlyList<Product>> GetByIdsAsync(List<Guid> ids, CancellationToken cancellationToken =
+            default)
+    {
+        return await SetAsNoTracking
+            .Where(p => ids.Contains(p.Id))
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<Product?> GetByNameAsync(string name, CancellationToken cancellationToken = default)
     {
         throw new NotImplementedException();
