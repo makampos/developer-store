@@ -7,8 +7,6 @@ namespace Ambev.DeveloperEvaluation.Unit.Domain;
 
 public static class CreateProductHandlerTestData
 {
-
-
     private static readonly Faker<CreateProductCommand> createProductHandlerFaker = new Faker<CreateProductCommand>()
         .RuleFor(x => x.Title, f => f.Commerce.ProductName())
         .RuleFor(x => x.Price, f => Math.Round(f.Finance.Random.Decimal(1, 500), 1))
