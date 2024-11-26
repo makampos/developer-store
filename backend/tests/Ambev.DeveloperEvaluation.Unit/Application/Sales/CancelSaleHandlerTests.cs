@@ -1,7 +1,9 @@
 using Ambev.DeveloperEvaluation.Application.Sales.CancelSale;
+using Ambev.DeveloperEvaluation.Domain.Events;
 using Ambev.DeveloperEvaluation.Domain.Repositories;
 using Ambev.DeveloperEvaluation.Unit.Application.TestData.Sales;
 using FluentAssertions;
+using MassTransit;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using NSubstitute.ReturnsExtensions;
@@ -14,12 +16,14 @@ public class CancelSaleHandlerTests
     private readonly ISaleRepository _saleRepository;
     private readonly ILogger<CancelSaleHandler> _logger;
     private readonly CancelSaleHandler _handler;
+    private readonly IBus _bus;
 
     public CancelSaleHandlerTests()
     {
         _saleRepository = Substitute.For<ISaleRepository>();
         _logger = Substitute.For<ILogger<CancelSaleHandler>>();
-        _handler = new CancelSaleHandler(_saleRepository, _logger);
+        _bus = Substitute.For<IBus>();
+        _handler = new CancelSaleHandler(_saleRepository, _logger, _bus);
     }
 
     [Fact(DisplayName = "Given valid command when cancel sale then return success message")]
@@ -31,6 +35,7 @@ public class CancelSaleHandlerTests
         var sale = GetSaleHandlerTestData.GenerateValidSale(createSaleCommand.CartItems[0].ProductId, 1,1);
 
         _saleRepository.GetByIdAsync(command.SaleId, Arg.Any<CancellationToken>()).Returns(sale);
+        _bus.Publish(Arg.Any<SaleCancelledEvent>(), Arg.Any<CancellationToken>()).Returns(Task.CompletedTask);
 
         // When
         var result = await _handler.Handle(command, CancellationToken.None);

@@ -1,15 +1,16 @@
 using Ambev.DeveloperEvaluation.Application.Sales.UpdateSale;
 using Ambev.DeveloperEvaluation.Domain.Entities;
+using Ambev.DeveloperEvaluation.Domain.Events;
 using Ambev.DeveloperEvaluation.Domain.Repositories;
 using Ambev.DeveloperEvaluation.Domain.ValueObjects;
 using Ambev.DeveloperEvaluation.Unit.Application.TestData.Sales;
 using Ambev.DeveloperEvaluation.Unit.Domain;
 using AutoMapper;
 using FluentAssertions;
+using MassTransit;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Xunit;
-using Guid = System.Guid;
 
 namespace Ambev.DeveloperEvaluation.Unit.Application.Sales;
 
@@ -20,6 +21,7 @@ public class UpdateSaleHandlerTests
     private readonly IMapper _mapper;
     private readonly ILogger<UpdateSaleHandler> _logger;
     private readonly UpdateSaleHandler _handler;
+    private readonly IBus _bus;
 
     public UpdateSaleHandlerTests()
     {
@@ -27,7 +29,8 @@ public class UpdateSaleHandlerTests
         _productRepository = Substitute.For<IProductRepository>();
         _mapper = Substitute.For<IMapper>();
         _logger = Substitute.For<ILogger<UpdateSaleHandler>>();
-        _handler = new UpdateSaleHandler(_saleRepository, _productRepository, _mapper, _logger);
+        _bus = Substitute.For<IBus>();
+        _handler = new UpdateSaleHandler(_saleRepository, _productRepository, _mapper, _logger, _bus);
     }
 
     [Fact(DisplayName = "Given valid command When updating sale Then returns success result")]
@@ -55,6 +58,7 @@ public class UpdateSaleHandlerTests
         _saleRepository.UpdateAsync(Arg.Any<Sale>(), Arg.Any<CancellationToken>()).Returns(saleToBeUpdated);
 
         _mapper.Map<UpdateSaleResult>(Arg.Any<Sale>()).Returns(saleUpdatedResult);
+        _bus.Publish(Arg.Any<SaleModifiedEvent>(), Arg.Any<CancellationToken>()).Returns(Task.CompletedTask);
 
         // When
         var result = await _handler.Handle(updateSaleCommand, CancellationToken.None);

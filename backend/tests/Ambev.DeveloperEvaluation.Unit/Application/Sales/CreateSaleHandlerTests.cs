@@ -1,10 +1,12 @@
 using Ambev.DeveloperEvaluation.Application.Sales.CreateSale;
 using Ambev.DeveloperEvaluation.Domain.Entities;
+using Ambev.DeveloperEvaluation.Domain.Events;
 using Ambev.DeveloperEvaluation.Domain.Repositories;
 using Ambev.DeveloperEvaluation.Unit.Application.TestData.Sales;
 using Ambev.DeveloperEvaluation.Unit.Domain;
 using AutoMapper;
 using FluentAssertions;
+using MassTransit;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Xunit;
@@ -18,6 +20,7 @@ public class CreateSaleHandlerTests
     private readonly IMapper _mapper;
     private readonly ILogger<CreateSaleHandler> _logger;
     private readonly CreateSaleHandler _handler;
+    private readonly IBus _bus;
 
     public CreateSaleHandlerTests()
     {
@@ -25,7 +28,8 @@ public class CreateSaleHandlerTests
         _productRepository = Substitute.For<IProductRepository>();
         _mapper = Substitute.For<IMapper>();
         _logger = Substitute.For<ILogger<CreateSaleHandler>>();
-        _handler = new CreateSaleHandler(_saleRepository, _productRepository, _mapper, _logger);
+        _bus = Substitute.For<IBus>();
+        _handler = new CreateSaleHandler(_saleRepository, _productRepository, _mapper, _logger, _bus);
     }
 
     [Fact(DisplayName = "Given valid command When creating sale Then returns success result")]
@@ -56,6 +60,8 @@ public class CreateSaleHandlerTests
         _mapper.Map<CreateSaleResult>(saleResult).Returns(createSaleResult);
 
         _saleRepository.CreateAsync(Arg.Any<Sale>(), Arg.Any<CancellationToken>()).Returns(saleResult);
+
+        _bus.Publish(Arg.Any<SaleCreatedEvent>(), Arg.Any<CancellationToken>()).Returns(Task.CompletedTask);
 
         // When
         var result = await _handler.Handle(mergedCommand, CancellationToken.None);
