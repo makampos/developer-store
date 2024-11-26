@@ -12,17 +12,14 @@ using Xunit;
 
 namespace Ambev.DeveloperEvaluation.Integration.Controllers;
 
-public class CartsControllerTests : IClassFixture<CustomWebApplicationFactory>
-{
-    private readonly HttpClient _client;
-    private readonly CustomWebApplicationFactory _factory;
 
-    public CartsControllerTests(CustomWebApplicationFactory factory)
-    {
-        _factory = factory;
-        _factory.InitializeAsync().GetAwaiter().GetResult();
-        _client = _factory.CreateClient();
-    }
+[CollectionDefinition(nameof(CartsControllerTestsCollection))]
+public class CartsControllerTestsCollection : ICollectionFixture<IntegrationTestFactory>;
+
+[Collection(nameof(CartsControllerTestsCollection))]
+public class CartsControllerTests : DatabaseTest
+{
+    public CartsControllerTests(IntegrationTestFactory factory) : base(factory){ }
 
     [Fact(DisplayName = "Given a valid request, When creating a cart, Then it should return Created StatusCode " +
                         "and a cart response")]
@@ -32,7 +29,7 @@ public class CartsControllerTests : IClassFixture<CustomWebApplicationFactory>
         var request  = CreateCartRequestFaker.GenerateValidRequest();
 
         // When
-        var response = await _client.PostAsJsonAsync("api/carts", request);
+        var response = await Client.PostAsJsonAsync("api/carts", request);
 
         // Then
         response.EnsureSuccessStatusCode();
@@ -53,14 +50,14 @@ public class CartsControllerTests : IClassFixture<CustomWebApplicationFactory>
     {
         // Given
         var createCartRequest = CreateCartRequestFaker.GenerateValidRequest();
-        var createCartResponse = await _client.PostAsJsonAsync("api/carts", createCartRequest);
+        var createCartResponse = await Client.PostAsJsonAsync("api/carts", createCartRequest);
         createCartResponse.EnsureSuccessStatusCode();
 
         var cartId = await createCartResponse.Content.ReadFromJsonAsync<ApiResponseWithData<CreateCartResponse>>();
 
         // When
         var id = cartId!.Data!.Id;
-        var response = await _client.GetAsync($"api/carts/{id}");
+        var response = await Client.GetAsync($"api/carts/{id}");
 
         // Then
         response.EnsureSuccessStatusCode();
@@ -81,7 +78,7 @@ public class CartsControllerTests : IClassFixture<CustomWebApplicationFactory>
         var request = DeleteCartRequestFaker.GenerateInvalidRequest();
 
         // When
-        var response = await _client.DeleteAsync($"api/carts/{request.Id}");
+        var response = await Client.DeleteAsync($"api/carts/{request.Id}");
         var errorResponse = await response.Content.ReadFromJsonAsync<ApiResponse>();
 
         // Then
@@ -96,14 +93,14 @@ public class CartsControllerTests : IClassFixture<CustomWebApplicationFactory>
     {
         // Given
         var createCartRequest = CreateCartRequestFaker.GenerateValidRequest();
-        var createCartResponse = await _client.PostAsJsonAsync("api/carts", createCartRequest);
+        var createCartResponse = await Client.PostAsJsonAsync("api/carts", createCartRequest);
         createCartResponse.EnsureSuccessStatusCode();
 
         var createCarResponse = await createCartResponse.Content.ReadFromJsonAsync<ApiResponseWithData<CreateCartResponse>>();
 
         // When
         var id = createCarResponse!.Data!.Id;
-        var response = await _client.DeleteAsync($"api/carts/{id}");
+        var response = await Client.DeleteAsync($"api/carts/{id}");
         response.EnsureSuccessStatusCode();
         var deleteResponse = await response.Content.ReadFromJsonAsync<ApiResponse>();
 
@@ -119,12 +116,12 @@ public class CartsControllerTests : IClassFixture<CustomWebApplicationFactory>
     {
         // Given
         var createCartRequest = CreateCartRequestFaker.GenerateValidRequest();
-        var createCartResponse = await _client.PostAsJsonAsync("api/carts", createCartRequest);
+        var createCartResponse = await Client.PostAsJsonAsync("api/carts", createCartRequest);
         createCartResponse.EnsureSuccessStatusCode();
 
         // When
         var getAllCartsRequest = GetAllCartRequest.Create(1, 10);
-        var response = await _client.GetAsync($"api/carts?pageNumber={getAllCartsRequest.PageNumber}&pageSize={getAllCartsRequest.PageSize}");
+        var response = await Client.GetAsync($"api/carts?pageNumber={getAllCartsRequest.PageNumber}&pageSize={getAllCartsRequest.PageSize}");
         response.EnsureSuccessStatusCode();
 
         var result = await response.Content.ReadFromJsonAsync<PaginatedResponse<GetCartResponse>>();
@@ -150,7 +147,7 @@ public class CartsControllerTests : IClassFixture<CustomWebApplicationFactory>
         var getAllCartsRequest = GetAllCartRequest.Create(-1, -10);
 
         // When
-        var response = await _client.GetAsync($"api/carts?pageNumber={getAllCartsRequest.PageNumber}&pageSize={getAllCartsRequest.PageSize}");
+        var response = await Client.GetAsync($"api/carts?pageNumber={getAllCartsRequest.PageNumber}&pageSize={getAllCartsRequest.PageSize}");
 
         // Then
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
@@ -170,14 +167,14 @@ public class CartsControllerTests : IClassFixture<CustomWebApplicationFactory>
 
         foreach (var createCartRequest in createCartRequests)
         {
-            var createCartResponse = await _client.PostAsJsonAsync("api/carts", createCartRequest);
+            var createCartResponse = await Client.PostAsJsonAsync("api/carts", createCartRequest);
             createCartResponse.EnsureSuccessStatusCode();
         }
 
         var request = GetAllCartRequest.Create(1, 10, "date asc");
 
         // When
-        var response = await _client.GetAsync($"api/carts?pageNumber={request.PageNumber}&pageSize={request.PageSize}&order={request.Order}");
+        var response = await Client.GetAsync($"api/carts?pageNumber={request.PageNumber}&pageSize={request.PageSize}&order={request.Order}");
         response.EnsureSuccessStatusCode();
 
         // Then
@@ -202,7 +199,7 @@ public class CartsControllerTests : IClassFixture<CustomWebApplicationFactory>
     {
         // Given
         var createCartRequest = CreateCartRequestFaker.GenerateValidRequest();
-        var createCartResponse = await _client.PostAsJsonAsync("api/carts", createCartRequest);
+        var createCartResponse = await Client.PostAsJsonAsync("api/carts", createCartRequest);
         createCartResponse.EnsureSuccessStatusCode();
 
         var cartId = await createCartResponse.Content.ReadFromJsonAsync<ApiResponseWithData<CreateCartResponse>>();
@@ -211,7 +208,7 @@ public class CartsControllerTests : IClassFixture<CustomWebApplicationFactory>
 
         // When
         var id = cartId!.Data!.Id;
-        var response = await _client.PutAsJsonAsync($"api/carts/{id}", updateCartRequest);
+        var response = await Client.PutAsJsonAsync($"api/carts/{id}", updateCartRequest);
 
         // Then
         response.EnsureSuccessStatusCode();
@@ -230,7 +227,7 @@ public class CartsControllerTests : IClassFixture<CustomWebApplicationFactory>
     {
         // Given
         var createCartRequest = CreateCartRequestFaker.GenerateValidRequest();
-        var createCartResponse = await _client.PostAsJsonAsync("api/carts", createCartRequest);
+        var createCartResponse = await Client.PostAsJsonAsync("api/carts", createCartRequest);
         createCartResponse.EnsureSuccessStatusCode();
 
         var cartId = await createCartResponse.Content.ReadFromJsonAsync<ApiResponseWithData<CreateCartResponse>>();
@@ -240,7 +237,7 @@ public class CartsControllerTests : IClassFixture<CustomWebApplicationFactory>
         // When
 
         var id = cartId!.Data!.Id;
-        var response = await _client.PutAsJsonAsync($"api/carts/{id}", updateCartRequest);
+        var response = await Client.PutAsJsonAsync($"api/carts/{id}", updateCartRequest);
 
         // Then
         var errorResponse = await response.Content.ReadFromJsonAsync<ApiResponse>();
