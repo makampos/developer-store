@@ -1,15 +1,4 @@
-# Developer Evaluation Project
-
-`READ CAREFULLY`
-
-## Instructions
-**The test below will have up to 7 calendar days to be delivered from the date of receipt of this manual.**
-
-- The code must be versioned in a public Github repository and a link must be sent for evaluation once completed
-- Upload this template to your repository and start working from it
-- Read the instructions carefully and make sure all requirements are being addressed
-- The repository must provide instructions on how to configure, execute and test the project
-- Documentation and overall organization will also be taken into consideration
+# Developer Store Project
 
 ## Use Case
 **You are a developer on the DeveloperStore team. Now we need to implement the API prototypes.**
@@ -55,32 +44,39 @@ These business rules define quantity-based discounting tiers and limitations:
    - Maximum limit: 20 items per product
    - No discounts allowed for quantities below 4 items
 
-## Overview
-This section provides a high-level overview of the project and the various skills and competencies it aims to assess for developer candidates. 
+---
 
-See [Overview](/.doc/overview.md)
+## Instructions to Prepare and Run the Project
+To set up and run the project, follow these steps:
 
-## Tech Stack
-This section lists the key technologies used in the project, including the backend, testing, frontend, and database components. 
+#### Prerequisites
+Ensure you have Docker installed on your machine.
 
-See [Tech Stack](/.doc/tech-stack.md)
 
-## Frameworks
-This section outlines the frameworks and libraries that are leveraged in the project to enhance development productivity and maintainability. 
+#### Step 1: Raise Containers
+You need to start the containers for the database and RabbitMQ. Execute the following commands in the root folder of your project:
 
-See [Frameworks](/.doc/frameworks.md)
+```
+docker-compose --project-name ambev-db up -d ambev.developerevaluation.database
+docker-compose --project-name ambev-bus up -d ambev.developerevaluation.rabbitmq
+```
 
-<!-- 
-## API Structure
-This section includes links to the detailed documentation for the different API resources:
-- [API General](./docs/general-api.md)
-- [Products API](/.doc/products-api.md)
-- [Carts API](/.doc/carts-api.md)
-- [Users API](/.doc/users-api.md)
-- [Auth API](/.doc/auth-api.md)
--->
+#### Step 2: Update the Database
+After raising the containers, update the database using Entity Framework Core. You can do this in one of two ways:
+Using Rider IDE:
+Navigate to Tools > Entity Framework Core > Update Database.
+Using Command Line:
+Run the following command in the root folder:
 
-## Project Structure
-This section describes the overall structure and organization of the project files and directories. 
+```
+/usr/local/share/dotnet/dotnet ef database update --project src/Ambev.DeveloperEvaluation.ORM/Ambev.DeveloperEvaluation.ORM.csproj --startup-project src/Ambev.DeveloperEvaluation.WebApi/Ambev.DeveloperEvaluation.WebApi.csproj --context Ambev.DeveloperEvaluation.ORM.DefaultContext
+```
 
-See [Project Structure](/.doc/project-structure.md)
+#### Step 3: Run the Web API Project 
+Select the project `Ambev.DeveloperEvaluation.WebApi` in your IDE and run it. This will start the Web API service.
+
+#### Step 4: Access Swagger UI
+Once the Web API is running, navigate to `http://localhost:5119/swagger/index.html` in your web browser. This page will display all available routes through Swagger, allowing you to test and interact with your API endpoints.
+
+#### Step 5: Ready to Go
+Your environment is now set up, and you can start working with the project. You can use Swagger to explore different APIs and test their functionality.
