@@ -12,18 +12,14 @@ using Xunit;
 
 namespace Ambev.DeveloperEvaluation.Integration.Controllers;
 
-[Collection("Integration Tests")]
-public class ProductControllerTests : IClassFixture<CustomWebApplicationFactory>
-{
-    private readonly HttpClient _client;
-    private readonly CustomWebApplicationFactory _factory;
 
-    public ProductControllerTests(CustomWebApplicationFactory factory)
-    {
-        _factory = factory;
-        _factory.InitializeAsync().GetAwaiter().GetResult();
-        _client = _factory.CreateClient();
-    }
+[CollectionDefinition(nameof(ProductControllerTestsCollection))]
+public class ProductControllerTestsCollection : ICollectionFixture<IntegrationTestFactory>;
+
+[Collection(nameof(ProductControllerTestsCollection))]
+public class ProductControllerTests : DatabaseTest
+{
+    public ProductControllerTests(IntegrationTestFactory factory) : base(factory){ }
 
     [Fact(DisplayName = "Given a valid request, When creating a product, Should return Created StatusCode")]
     public async Task CreateProduct_WithValidRequest_ShouldReturnCreated()
@@ -32,7 +28,7 @@ public class ProductControllerTests : IClassFixture<CustomWebApplicationFactory>
         var request = CreateProductRequestFaker.GenerateValidRequests(1)[0];
 
         // When
-        var response = await _client.PostAsJsonAsync("/api/Product", request);
+        var response = await Client.PostAsJsonAsync("/api/Product", request);
 
         // Then
         response.EnsureSuccessStatusCode();
@@ -42,6 +38,7 @@ public class ProductControllerTests : IClassFixture<CustomWebApplicationFactory>
 
         result!.Data!.Id.Should().NotBeEmpty();
         result.Success.Should().BeTrue();
+
     }
 
     [Fact(DisplayName = "Given an invalid request, When creating a product, Should return BadRequest StatusCode")]
@@ -51,7 +48,7 @@ public class ProductControllerTests : IClassFixture<CustomWebApplicationFactory>
         var request = CreateProductRequestFaker.GenerateInvalidRequest();
 
         // When
-        var response = await _client.PostAsJsonAsync("/api/Product", request);
+        var response = await Client.PostAsJsonAsync("/api/Product", request);
 
         // Then
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
@@ -64,7 +61,7 @@ public class ProductControllerTests : IClassFixture<CustomWebApplicationFactory>
     {
         // Given
         var createRequest = CreateProductRequestFaker.GenerateValidRequests(1)[0];
-        var createResponse = await _client.PostAsJsonAsync("/api/Product", createRequest);
+        var createResponse = await Client.PostAsJsonAsync("/api/Product", createRequest);
         createResponse.EnsureSuccessStatusCode();
 
         var id = await createResponse.Content
@@ -74,7 +71,7 @@ public class ProductControllerTests : IClassFixture<CustomWebApplicationFactory>
         var request = UpdateProductRequestFaker.GenerateValidRequest();
 
         // When
-        var response = await _client.PutAsJsonAsync($"/api/Product/{id}", request);
+        var response = await Client.PutAsJsonAsync($"/api/Product/{id}", request);
 
         // Then
         response.EnsureSuccessStatusCode();
@@ -91,7 +88,7 @@ public class ProductControllerTests : IClassFixture<CustomWebApplicationFactory>
         var id = Guid.NewGuid();
 
         // When
-        var response = await _client.PutAsJsonAsync($"/api/Product/{id}", request);
+        var response = await Client.PutAsJsonAsync($"/api/Product/{id}", request);
 
         // Then
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
@@ -104,7 +101,7 @@ public class ProductControllerTests : IClassFixture<CustomWebApplicationFactory>
         var id = Guid.Empty;
 
         // When
-        var response = await _client.DeleteAsync($"/api/Product/{id}");
+        var response = await Client.DeleteAsync($"/api/Product/{id}");
 
         // Then
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
@@ -115,7 +112,7 @@ public class ProductControllerTests : IClassFixture<CustomWebApplicationFactory>
     {
         // Given
         var createRequest = CreateProductRequestFaker.GenerateValidRequests(1)[0];
-        var createResponse = await _client.PostAsJsonAsync("/api/Product", createRequest);
+        var createResponse = await Client.PostAsJsonAsync("/api/Product", createRequest);
         createResponse.EnsureSuccessStatusCode();
 
         var id = await createResponse.Content
@@ -123,7 +120,7 @@ public class ProductControllerTests : IClassFixture<CustomWebApplicationFactory>
             .ContinueWith(x => x.Result!.Data!.Id);
 
         // When
-        var response = await _client.DeleteAsync($"/api/Product/{id}");
+        var response = await Client.DeleteAsync($"/api/Product/{id}");
 
         // Then
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -139,7 +136,7 @@ public class ProductControllerTests : IClassFixture<CustomWebApplicationFactory>
     {
         // Given
         var createRequest = CreateProductRequestFaker.GenerateValidRequests(1)[0];
-        var createdResponse = await _client.PostAsJsonAsync("/api/Product", createRequest);
+        var createdResponse = await Client.PostAsJsonAsync("/api/Product", createRequest);
         createdResponse.EnsureSuccessStatusCode();
 
         var createdProductResponse = await createdResponse.Content
@@ -148,7 +145,7 @@ public class ProductControllerTests : IClassFixture<CustomWebApplicationFactory>
         var id = createdProductResponse!.Data!.Id;
 
         // When
-        var getResponse = await _client.GetAsync($"/api/Product/{id}");
+        var getResponse = await Client.GetAsync($"/api/Product/{id}");
 
         // Then
         getResponse.EnsureSuccessStatusCode();
@@ -170,7 +167,7 @@ public class ProductControllerTests : IClassFixture<CustomWebApplicationFactory>
         var id = Guid.Empty;
 
         // When
-        var response = await _client.GetAsync($"/api/Product/{id}");
+        var response = await Client.GetAsync($"/api/Product/{id}");
 
         // Then
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
@@ -184,7 +181,7 @@ public class ProductControllerTests : IClassFixture<CustomWebApplicationFactory>
 
         foreach (var cpr in createdProductRequestList)
         {
-            var createResponse = await _client.PostAsJsonAsync("/api/Product", cpr);
+            var createResponse = await Client.PostAsJsonAsync("/api/Product", cpr);
             createResponse.EnsureSuccessStatusCode();
         }
 
@@ -192,7 +189,7 @@ public class ProductControllerTests : IClassFixture<CustomWebApplicationFactory>
 
         // When
         var response =
-            await _client.GetAsync($"/api/Product?pageNumber={request.PageNumber}&pageSize={request.PageSize}");
+            await Client.GetAsync($"/api/Product?pageNumber={request.PageNumber}&pageSize={request.PageSize}");
 
 
         // Then
@@ -219,13 +216,13 @@ public class ProductControllerTests : IClassFixture<CustomWebApplicationFactory>
 
         foreach (var cpr in createdProductRequestList)
         {
-            var createResponse = await _client.PostAsJsonAsync("/api/Product", cpr);
+            var createResponse = await Client.PostAsJsonAsync("/api/Product", cpr);
             createResponse.EnsureSuccessStatusCode();
         }
 
         // When
         var response =
-            await _client.GetAsync($"/api/Product");
+            await Client.GetAsync($"/api/Product");
 
         // Then
         response.EnsureSuccessStatusCode();
@@ -252,7 +249,7 @@ public class ProductControllerTests : IClassFixture<CustomWebApplicationFactory>
 
         foreach (var cpr in createdProductRequestList)
         {
-            var createResponse = await _client.PostAsJsonAsync("/api/Product", cpr);
+            var createResponse = await Client.PostAsJsonAsync("/api/Product", cpr);
             createResponse.EnsureSuccessStatusCode();
         }
 
@@ -260,7 +257,7 @@ public class ProductControllerTests : IClassFixture<CustomWebApplicationFactory>
 
         // When
         var response =
-            await _client.GetAsync(
+            await Client.GetAsync(
                 $"/api/Product?pageNumber={request.PageNumber}&pageSize={request.PageSize}&order={request.Order}");
 
         // Then
@@ -295,7 +292,7 @@ public class ProductControllerTests : IClassFixture<CustomWebApplicationFactory>
 
         foreach (var cpr in createdProductRequestList)
         {
-            var createResponse = await _client.PostAsJsonAsync("/api/Product", cpr);
+            var createResponse = await Client.PostAsJsonAsync("/api/Product", cpr);
             createResponse.EnsureSuccessStatusCode();
         }
 
@@ -303,7 +300,7 @@ public class ProductControllerTests : IClassFixture<CustomWebApplicationFactory>
 
         // When
         var response =
-            await _client.GetAsync(
+            await Client.GetAsync(
                 $"/api/Product?pageNumber={request.PageNumber}&pageSize={request.PageSize}&order={request.Order}");
 
         // Then
@@ -337,13 +334,13 @@ public class ProductControllerTests : IClassFixture<CustomWebApplicationFactory>
 
         foreach (var cpr in createdProductRequestList)
         {
-            var createResponse = await _client.PostAsJsonAsync("/api/Product", cpr);
+            var createResponse = await Client.PostAsJsonAsync("/api/Product", cpr);
             createResponse.EnsureSuccessStatusCode();
         }
 
         // When
         var response =
-            await _client.GetAsync($"/api/Product/categories");
+            await Client.GetAsync($"/api/Product/categories");
 
         // Then
         response.EnsureSuccessStatusCode();
@@ -365,7 +362,7 @@ public class ProductControllerTests : IClassFixture<CustomWebApplicationFactory>
 
         foreach (var cpr in createdProductRequestList)
         {
-            var createResponse = await _client.PostAsJsonAsync("/api/Product", cpr);
+            var createResponse = await Client.PostAsJsonAsync("/api/Product", cpr);
             createResponse.EnsureSuccessStatusCode();
         }
 
@@ -375,7 +372,7 @@ public class ProductControllerTests : IClassFixture<CustomWebApplicationFactory>
 
         // When
         var response =
-            await _client.GetAsync($"/api/Product/category/{category}?pageNumber={request.PageNumber}&pageSize={request.PageSize}");
+            await Client.GetAsync($"/api/Product/category/{category}?pageNumber={request.PageNumber}&pageSize={request.PageSize}");
 
         // Then
         response.EnsureSuccessStatusCode();
