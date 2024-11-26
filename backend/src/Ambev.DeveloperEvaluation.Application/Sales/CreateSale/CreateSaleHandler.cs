@@ -1,7 +1,9 @@
 using Ambev.DeveloperEvaluation.Domain.Entities;
+using Ambev.DeveloperEvaluation.Domain.Events;
 using Ambev.DeveloperEvaluation.Domain.Repositories;
 using Ambev.DeveloperEvaluation.Domain.ValueObjects;
 using AutoMapper;
+using MassTransit;
 using MediatR;
 using Microsoft.Extensions.Logging;
 
@@ -13,13 +15,15 @@ public class CreateSaleHandler : IRequestHandler<CreateSaleCommand, CreateSaleRe
     private readonly IProductRepository _productRepository;
     private readonly IMapper _mapper;
     private readonly ILogger<CreateSaleHandler> _logger;
+    private readonly IBus _bus;
 
-    public CreateSaleHandler(ISaleRepository saleRepository, IProductRepository productRepository, IMapper mapper, ILogger<CreateSaleHandler> logger)
+    public CreateSaleHandler(ISaleRepository saleRepository, IProductRepository productRepository, IMapper mapper, ILogger<CreateSaleHandler> logger, IBus bus)
     {
         _saleRepository = saleRepository;
         _productRepository = productRepository;
         _mapper = mapper;
         _logger = logger;
+        _bus = bus;
     }
 
     public async Task<CreateSaleResult> Handle(CreateSaleCommand command, CancellationToken cancellationToken)
@@ -49,8 +53,30 @@ public class CreateSaleHandler : IRequestHandler<CreateSaleCommand, CreateSaleRe
              userId: command.UserId);
 
         var saleCreated = await _saleRepository.CreateAsync(sale, cancellationToken);
-        var map = _mapper.Map<CreateSaleResult>(saleCreated);
+        var saleResult = _mapper.Map<CreateSaleResult>(saleCreated);
 
-        return map;
+        try
+        {
+            _logger.LogInformation("Publishing event {SaleCreatedEvent} for sale with with id: {SaleId}", nameof(SaleCreatedEvent),
+                saleResult.Id);
+
+            await _bus.Publish<SaleCreatedEvent>(SaleCreatedEvent.Build(
+                id: saleResult.Id,
+                userId: saleResult.UserId,
+                saleDate: saleResult.SaleDate,
+                saleItems: saleResult.SaleItems,
+                totalSaleAmount: saleResult.TotalSaleAmount,
+                isCanceled: saleResult.IsCanceled,
+                totalSaleDiscount: saleResult.TotalSaleDiscount,
+                branch: saleResult.Branch
+                ), cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error while publishing event {SaleCreatedEvent} with id: {SaleId}",
+                nameof(SaleCreatedEvent), saleResult.Id);
+        }
+
+        return saleResult;
     }
 }
